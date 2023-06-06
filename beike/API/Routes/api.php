@@ -19,7 +19,12 @@ Route::prefix('api')
         Route::post('logout', [\Beike\API\Controllers\AuthController::class, 'logout']);
         Route::post('refresh', [\Beike\API\Controllers\AuthController::class, 'refresh']);
         Route::get('me', [\Beike\API\Controllers\AuthController::class, 'me']);
+
+        Route::get('home', [\Beike\API\Controllers\HomeController::class, 'index']);
+        Route::get('products', [\Beike\API\Controllers\ProductController::class, 'index']);
     });
+
+
 
 Route::prefix('admin_api')
     ->middleware(['admin_api'])
