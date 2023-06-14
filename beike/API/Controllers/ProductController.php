@@ -12,7 +12,9 @@
 namespace Beike\API\Controllers;
 
 use App\Http\Controllers\Controller;
+use Beike\Models\Product;
 use Beike\Repositories\ProductRepo;
+use Beike\Shop\Http\Resources\ProductDetail;
 use Beike\Shop\Http\Resources\ProductSimple;
 use Illuminate\Http\Request;
 
@@ -21,8 +23,14 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $filterData = $request->only('attr', 'price', 'sort', 'order', 'per_page', 'category_id');
-        $products   = ProductRepo::getBuilder( $filterData)->with('inCurrentWishlist')->paginate($filterData['per_page'] ?? perPage());
+        $products = ProductRepo::getBuilder($filterData)->with('inCurrentWishlist')->paginate($filterData['per_page'] ?? perPage());
 
-        return ProductSimple::collection($products)->jsonSerialize();
+        return ProductSimple::collection($products);
+    }
+
+
+    public function show(Request $request, Product $product)
+    {
+        return new ProductDetail($product);
     }
 }

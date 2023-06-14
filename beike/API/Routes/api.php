@@ -22,6 +22,7 @@ Route::prefix('api')
 
         Route::get('home', [\Beike\API\Controllers\HomeController::class, 'index']);
         Route::get('products', [\Beike\API\Controllers\ProductController::class, 'index']);
+        Route::get('products/{product}', [\Beike\API\Controllers\ProductController::class, 'show']);
     });
 
 
