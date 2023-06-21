@@ -16,6 +16,7 @@ Route::prefix('api')
     ->name('api.')
     ->group(function () {
         Route::post('login', [\Beike\API\Controllers\AuthController::class, 'login']);
+
         Route::post('logout', [\Beike\API\Controllers\AuthController::class, 'logout']);
         Route::post('refresh', [\Beike\API\Controllers\AuthController::class, 'refresh']);
         Route::get('me', [\Beike\API\Controllers\AuthController::class, 'me']);
@@ -28,7 +29,6 @@ Route::prefix('api')
         Route::put('carts/{cart}', [\Beike\API\Controllers\CartController::class, 'update']);
         Route::delete('carts/{cart}', [\Beike\API\Controllers\CartController::class, 'destroy']);
     });
-
 
 
 Route::prefix('admin_api')

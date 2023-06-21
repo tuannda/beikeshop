@@ -51,6 +51,10 @@ class AuthController extends Controller
     {
         $customer = auth('api_customer')->user();
 
+        if (empty($customer)) {
+            return json_fail('Empty Customer', [], 401);
+        }
+
         return response()->json(new CustomerResource($customer));
     }
 
