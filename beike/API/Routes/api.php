@@ -23,6 +23,10 @@ Route::prefix('api')
         Route::get('home', [\Beike\API\Controllers\HomeController::class, 'index']);
         Route::get('products', [\Beike\API\Controllers\ProductController::class, 'index']);
         Route::get('products/{product}', [\Beike\API\Controllers\ProductController::class, 'show']);
+
+        Route::get('carts', [\Beike\API\Controllers\CartController::class, 'index']);
+        Route::put('carts/{cart}', [\Beike\API\Controllers\CartController::class, 'update']);
+        Route::delete('carts/{cart}', [\Beike\API\Controllers\CartController::class, 'destroy']);
     });
 
 
