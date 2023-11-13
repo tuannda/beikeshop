@@ -11,6 +11,8 @@
 
 namespace Beike\Admin\Services;
 
+use Illuminate\Support\Facades\File;
+
 class FileManagerService
 {
     protected $fileBasePath = '';
@@ -29,7 +31,7 @@ class FileManagerService
     {
         $currentBasePath = rtrim($this->fileBasePath . $baseFolder, '/');
 
-        $directories     = glob("{$currentBasePath}/*", GLOB_ONLYDIR);
+        $directories = glob("{$currentBasePath}/*", GLOB_ONLYDIR);
 
         $result = [];
         foreach ($directories as $directory) {
@@ -97,11 +99,6 @@ class FileManagerService
         $imageCollection = collect($images);
 
         $currentImages = $imageCollection->forPage($page, $perPage);
-        $currentImages = $currentImages->map(function ($item) {
-            $item['url'] = image_resize("{$item['path']}");
-
-            return $item;
-        });
 
         return [
             'images'      => $currentImages->values(),
@@ -123,6 +120,74 @@ class FileManagerService
             throw new \Exception(trans('admin/file_manager.directory_already_exist'));
         }
         create_directories($catalogFolderPath);
+    }
+
+    /**
+     * 移动文件夹
+     *
+     * @param $sourcePath
+     * @param $destPath
+     * @throws \Exception
+     */
+    public function moveDirectory($sourcePath, $destPath)
+    {
+        if (empty($sourcePath)) {
+            throw new \Exception(trans('admin/file_manager.empty_source_path'));
+        }
+        if (empty($destPath)) {
+            throw new \Exception(trans('admin/file_manager.empty_dest_path'));
+        }
+
+        $folderName    = basename($sourcePath);
+        $sourceDirPath = public_path("catalog{$this->basePath}{$sourcePath}/");
+
+        if ($destPath != '/') {
+            $destDirPath = public_path("catalog{$this->basePath}{$destPath}/");
+        } else {
+            $destDirPath = public_path("catalog{$this->basePath}{$destPath}");
+        }
+
+        $destFullPath = public_path("catalog{$this->basePath}{$destPath}/{$folderName}");
+        if (! File::exists($destFullPath)) {
+            move_dir($sourceDirPath, $destDirPath);
+        } else {
+            throw new \Exception(trans('admin/file_manager.target_dir_exist'));
+        }
+    }
+
+    /**
+     * 批量移动图片文件
+     *
+     * @param $images
+     * @param $destPath
+     */
+    public function moveFiles($images, $destPath)
+    {
+        if ($destPath != '/') {
+            $destDirPath = public_path("catalog{$this->basePath}{$destPath}/");
+        } else {
+            $destDirPath = public_path("catalog{$this->basePath}{$destPath}");
+        }
+
+        foreach ($images as $image) {
+            $sourceDirPath = public_path($image);
+            File::move($sourceDirPath, $destDirPath . basename($sourceDirPath));
+        }
+    }
+
+    /**
+     * @param $imagePath
+     * @return string
+     */
+    public function zipFolder($imagePath): string
+    {
+        $realPath = $this->fileBasePath . $imagePath;
+        $dirName  = basename($realPath);
+        $zipName  = $dirName . '-' . date('Ymd') . '.zip';
+        $zipPath  = public_path("{$zipName}");
+        zip_folder($realPath, $zipPath);
+
+        return $zipPath;
     }
 
     /**
@@ -182,14 +247,26 @@ class FileManagerService
         if ($originPath == $newPath) {
             return;
         }
-        @rename($originPath, $newPath);
+        $result = @rename($originPath, $newPath);
+        if (!$result) {
+            throw new \Exception(trans('admin/file_manager.rename_failed'));
+        }
     }
 
-    public function uploadFile($file, $savePath, $originName)
+    /**
+     * 上传文件
+     *
+     * @param $file
+     * @param $savePath
+     * @param $originName
+     * @return mixed
+     */
+    public function uploadFile($file, $savePath, $originName): mixed
     {
         $savePath = $this->basePath . $savePath;
+        $filePath = $file->storeAs($savePath, $originName, 'catalog');
 
-        return $file->storeAs($savePath, $originName, 'catalog');
+        return asset('catalog/' . $filePath);
     }
 
     /**
@@ -237,17 +314,18 @@ class FileManagerService
     private function handleImage($filePath, $baseName): array
     {
         $path     = "catalog{$filePath}";
-        $realPath = $this->fileBasePath . $filePath;
+        $realPath = $this->fileBasePath . str_replace($this->basePath, '', $filePath);
 
         $mime = '';
-        if(file_exists($realPath)) {
+        if (file_exists($realPath)) {
             $mime = mime_content_type($realPath);
         }
 
         return [
-            'path'       => $path,
+            'path'       => '/' . $path,
             'name'       => $baseName,
             'origin_url' => image_origin($path),
+            'url'        => image_resize($path),
             'mime'       => $mime,
             'selected'   => false,
         ];

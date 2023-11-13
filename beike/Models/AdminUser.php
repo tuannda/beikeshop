@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class AdminUser extends AuthUser implements JWTSubject
+class AdminUser extends AuthUser
 {
     use HasFactory, HasRoles;
     use Notifiable;
@@ -32,6 +31,11 @@ class AdminUser extends AuthUser implements JWTSubject
         } else {
             $this->notifyNow(new AdminForgottenNotification($this, $code));
         }
+    }
+
+    public function getIsRootAttribute()
+    {
+        return $this->id == 1;
     }
 
     /**

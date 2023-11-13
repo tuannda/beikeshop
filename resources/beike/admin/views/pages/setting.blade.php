@@ -2,9 +2,15 @@
 
 @section('title', __('admin/setting.index'))
 
-@section('page-title-right')
-  <button type="button" class="btn btn-lg btn-primary submit-form" form="app">{{ __('common.save') }}</button>
+@section('page-bottom-btns')
+  <button type="button" class="btn btn-lg w-min-100 btn-primary submit-form" form="app">{{ __('common.save') }}</button>
+  <button class="btn btn-lg btn-default w-min-100 ms-3" onclick="bk.back()">{{ __('common.return') }}</button>
 @endsection
+
+@push('header')
+  <script src="{{ asset('vendor/cropper/cropper.min.js') }}"></script>
+  <link rel="stylesheet" href="{{ asset('vendor/cropper/cropper.min.css') }}">
+@endpush
 
 @section('content')
   <div id="plugins-app-form" class="card h-min-600">
@@ -44,6 +50,7 @@
             <x-admin-form-textarea name="meta_keywords" title="{{ __('admin/setting.meta_keywords') }}" value="{{ old('meta_keywords', system_setting('base.meta_keywords', '')) }}" />
             <x-admin-form-input name="telephone" title="{{ __('admin/setting.telephone') }}" value="{{ old('telephone', system_setting('base.telephone', '')) }}" />
             <x-admin-form-input name="email" title="{{ __('admin/setting.email') }}" value="{{ old('email', system_setting('base.email', '')) }}" />
+            <x-admin-form-input name="license_code" title="{{ __('admin/setting.license_code') }}" value="{{ old('license_code', system_setting('base.license_code', '')) }}" />
             @hook('admin.setting.general.after')
           </div>
 
@@ -70,23 +77,26 @@
               </div>
             </x-admin::form.row>
 
-            <x-admin-form-select title="{{ __('admin/setting.default_language') }}" name="locale" :value="old('locale', system_setting('base.locale', 'zh_cn'))" :options="$admin_languages" key="code" label="name">
-              <div class="help-text font-size-12 lh-base">{{ __('admin/setting.default_language') }}</div>
-            </x-admin-form-select>
-
             <x-admin-form-select title="{{ __('admin/setting.default_currency') }}" name="currency" :value="old('currency', system_setting('base.currency', 'USD'))" :options="$currencies->toArray()" key="code" label="name">
               <div class="help-text font-size-12 lh-base">{{ __('admin/setting.default_currency') }}</div>
             </x-admin-form-select>
 
-              <x-admin-form-select title="{{ __('admin/setting.default_customer_group') }}" name="default_customer_group_id" :value="old('locale', system_setting('base.default_customer_group_id', ''))" :options="$customer_groups" key="id" label="name">
-                  <div class="help-text font-size-12 lh-base">{{ __('admin/setting.default_customer_group') }}</div>
-              </x-admin-form-select>
+            <x-admin-form-select title="{{ __('admin/setting.default_language') }}" name="locale" :value="old('locale', system_setting('base.locale', 'zh_cn'))" :options="$admin_languages" key="code" label="name">
+              <div class="help-text font-size-12 lh-base">{{ __('admin/setting.default_language') }}</div>
+            </x-admin-form-select>
+
+            <x-admin-form-select title="{{ __('admin/setting.default_customer_group') }}" name="default_customer_group_id" :value="old('locale', system_setting('base.default_customer_group_id', ''))" :options="$customer_groups" key="id" label="name">
+                <div class="help-text font-size-12 lh-base">{{ __('admin/setting.default_customer_group') }}</div>
+            </x-admin-form-select>
 
             <x-admin-form-input name="admin_name" title="{{ __('admin/setting.admin_name') }}" required value="{{ old('admin_name', system_setting('base.admin_name', 'admin')) }}">
               <div class="help-text font-size-12 lh-base">{{ __('admin/setting.admin_name_info') }}</div>
             </x-admin-form-input>
 
             <x-admin-form-input name="product_per_page" title="{{ __('admin/setting.product_per_page') }}" required value="{{ old('product_per_page', system_setting('base.product_per_page', 20)) }}">
+            </x-admin-form-input>
+
+            <x-admin-form-input name="cdn_url" title="{{ __('admin/setting.cdn_url') }}" value="{{ old('cdn_url', system_setting('base.cdn_url', '')) }}">
             </x-admin-form-input>
 
             <x-admin-form-textarea name="head_code" title="{{ __('admin/setting.head_code') }}" value="{!! old('head_code', system_setting('base.head_code', '')) !!}">
@@ -101,17 +111,29 @@
 
             @hook('admin.setting.image.before')
 
-            <x-admin-form-image name="logo" title="logo" :value="old('logo', system_setting('base.logo', ''))">
+            <x-admin::form.row title="Logo">
+              <div class="open-crop cursor-pointer bg-light wh-80 border d-flex justify-content-center align-items-center me-2 mb-2 position-relative" ratio="380/100">
+                <img src="{{ image_resize(old('logo', system_setting('base.logo', ''))) }}" class="img-fluid">
+              </div>
+              <input type="hidden" value="{{ old('logo', system_setting('base.logo', '')) }}" name="logo">
               <div class="help-text font-size-12 lh-base">{{ __('common.recommend_size') }} 380*100</div>
-            </x-admin-form-image>
+            </x-admin::form.row>
 
-            <x-admin-form-image name="favicon" title="favicon" :value="old('favicon', system_setting('base.favicon', ''))">
+            <x-admin::form.row title="favicon">
+              <div class="open-crop cursor-pointer bg-light wh-80 border d-flex justify-content-center align-items-center me-2 mb-2 position-relative" ratio="32/32">
+                <img src="{{ image_resize(old('favicon', system_setting('base.favicon', ''))) }}" class="img-fluid">
+              </div>
+              <input type="hidden" value="{{ old('favicon', system_setting('base.favicon', '')) }}" name="favicon">
               <div class="help-text font-size-12 lh-base">{{ __('admin/setting.favicon_info') }}</div>
-            </x-admin-form-image>
+            </x-admin::form.row>
 
-            <x-admin-form-image name="placeholder" title="{{ __('admin/setting.placeholder_image') }}" :value="old('placeholder', system_setting('base.placeholder', ''))">
+            <x-admin::form.row :title="__('admin/setting.placeholder_image')">
+              <div class="open-crop cursor-pointer bg-light wh-80 border d-flex justify-content-center align-items-center me-2 mb-2 position-relative" ratio="500/500">
+                <img src="{{ image_resize(old('placeholder', system_setting('base.placeholder', ''))) }}" class="img-fluid">
+              </div>
+              <input type="hidden" value="{{ old('placeholder', system_setting('base.placeholder', '')) }}" name="placeholder">
               <div class="help-text font-size-12 lh-base">{{ __('admin/setting.placeholder_image_info') }}</div>
-            </x-admin-form-image>
+            </x-admin::form.row>
 
             @hook('admin.setting.image.after')
           </div>
@@ -213,6 +235,20 @@
                 <a class="text-secondary" href="https://www.exchangerate-api.com/" target="_blank">www.exchangerate-api.com</a>
               </div>
             </x-admin-form-input>
+
+            <x-admin::form.row :title="__('admin/setting.order_auto_cancel')">
+              <div class="input-group wp-400">
+                <input type="number" value="{{ old('order_auto_cancel', system_setting('base.order_auto_cancel', '')) }}" name="order_auto_cancel" class="form-control" placeholder="{{ __('admin/setting.order_auto_cancel') }}">
+                <span class="input-group-text">{{ __('common.text_hour') }}</span>
+              </div>
+            </x-admin::form.row>
+
+            <x-admin::form.row :title="__('admin/setting.order_auto_complete')">
+              <div class="input-group wp-400">
+                <input type="number" value="{{ old('order_auto_complete', system_setting('base.order_auto_complete', '')) }}" name="order_auto_complete" class="form-control" placeholder="{{ __('admin/setting.order_auto_complete') }}">
+                <span class="input-group-text">{{ __('common.text_hour') }}</span>
+              </div>
+            </x-admin::form.row>
           </div>
 
           @hook('admin.setting.after')
@@ -222,6 +258,30 @@
           <button type="submit" class="btn btn-primary d-none mt-4">{{ __('common.submit') }}</button>
         </x-admin::form.row>
       </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="d-flex align-items-center">
+            <h5 class="modal-title" id="exampleModalLabel">{{ __('shop/account.edit.crop') }}</h5>
+            <div class="cropper-size ms-4">{{ __('common.cropper_size') }}：<span></span></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="img-container">
+            <img id="cropper-image" src="{{ image_resize('/') }}" class="img-fluid">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('shop/common.cancel') }}</button>
+          <button type="button" class="btn btn-primary cropper-crop">{{ __('shop/common.confirm') }}</button>
+        </div>
+      </div>
     </div>
   </div>
 @endsection
@@ -247,23 +307,19 @@
           });
         } else {
           $('select[name="zone_id"]').html(`
-            <option value="">请选择</option>
+            <option value="">{{ __('common.please_choose') }}</option>
           `);
         }
       })
     }
 
     $(function() {
-      const [tab, line] = [bk.getQueryString('tab'), bk.getQueryString('line')];
+      const line = bk.getQueryString('line');
       getZones(country_id);
 
       $('select[name="country_id"]').on('change', function () {
         getZones($(this).val());
       });
-
-      if (tab) {
-        $(`a[href="#${tab}"]`)[0].click()
-      }
 
       if (line) {
         $(`textarea[name="${line}"], select[name="${line}"], input[name="${line}"]`).parents('.row').addClass('active-line');
@@ -271,6 +327,76 @@
         setTimeout(() => {
           $('div').removeClass('active-line');
         }, 1200);
+      }
+    });
+  </script>
+
+  <script>
+    let ratio = 1;
+    let $crop = null
+    var cropper;
+
+    $(function() {
+      $('.open-crop').click(function() {
+        var image = document.getElementById('cropper-image');
+        $crop = $(this);
+        ratio = $(this).attr('ratio')
+        var cropper;
+        var $input = $('<input type="file" accept="image/*" class="d-none">');
+        $input.click();
+        $input.change(function() {
+          var files = this.files;
+          var done = function(url) {
+            image.src = url;
+            $('#modal').modal('show');
+          };
+
+          if (files && files.length > 0) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              done(reader.result);
+            };
+            reader.readAsDataURL(files[0]);
+          }
+        });
+      });
+    });
+
+    $('#modal').on('shown.bs.modal', function() {
+      var image = document.getElementById('cropper-image');
+      cropper = new Cropper(image, {
+        initialAspectRatio: ratio.split('/')[0] / ratio.split('/')[1],
+        autoCropArea: 1,
+        viewMode: 1,
+        // 回调 获取尺寸
+        crop: function(event) {
+          $('.cropper-size span').html(parseInt(event.detail.width) + ' * ' + parseInt(event.detail.height))
+        }
+      });
+    }).on('hidden.bs.modal', function() {
+      cropper.destroy();
+      cropper = null;
+    });
+
+    $('.cropper-crop').click(function(event) {
+      var canvas;
+
+      $('#modal').modal('hide');
+
+      if (cropper) {
+        canvas = cropper.getCroppedCanvas({
+          imageSmoothingQuality: 'high',
+        });
+        canvas.toBlob(function(blob) {
+          var formData = new FormData();
+
+          formData.append('file', blob, 'avatar.png');
+          formData.append('type', 'avatar');
+          $http.post('{{ shop_route('file.store') }}', formData).then(res => {
+            $crop.find('img').attr('src', res.data.url);
+            $crop.next('input').val(res.data.value);
+          })
+        });
       }
     });
   </script>

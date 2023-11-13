@@ -52,6 +52,7 @@ class ProductRepo
      * @param $categoryId
      * @param $filterData
      * @return LengthAwarePaginator
+     * @throws \Exception
      */
     public static function getProductsByCategory($categoryId, $filterData)
     {
@@ -66,6 +67,7 @@ class ProductRepo
      * 通过商品ID获取商品列表
      * @param $productIds
      * @return AnonymousResourceCollection
+     * @throws \Exception
      */
     public static function getProductsByIds($productIds): AnonymousResourceCollection
     {
@@ -87,17 +89,14 @@ class ProductRepo
      */
     public static function getBuilder(array $filters = []): Builder
     {
-        $builder = Product::query()->with('description', 'skus', 'masterSku', 'attributes');
+        $builder = Product::query()->with(['description', 'skus', 'masterSku', 'attributes', 'brand']);
 
         $builder->leftJoin('product_descriptions as pd', function ($build) {
             $build->whereColumn('pd.product_id', 'products.id')
                 ->where('locale', locale());
         });
-        $builder->leftJoin('product_skus', function ($build) {
-            $build->whereColumn('product_skus.product_id', 'products.id')
-                ->where('is_default', 1);
-        });
-        $builder->select(['products.*', 'pd.name', 'pd.content', 'pd.meta_title', 'pd.meta_description', 'pd.meta_keywords', 'pd.name', 'product_skus.price']);
+
+        $builder->select(['products.*', 'pd.name', 'pd.content', 'pd.meta_title', 'pd.meta_description', 'pd.meta_keywords', 'pd.name']);
 
         if (isset($filters['category_id'])) {
             $builder->whereHas('categories', function ($query) use ($filters) {
@@ -107,6 +106,11 @@ class ProductRepo
                     $query->where('category_id', $filters['category_id']);
                 }
             });
+        }
+
+        $brandId = $filters['brand_id'] ?? 0;
+        if ($brandId) {
+            $builder->where('brand_id', $brandId);
         }
 
         $productIds = $filters['product_ids'] ?? [];
@@ -181,7 +185,7 @@ class ProductRepo
         }
 
         if (isset($filters['created_end'])) {
-            $builder->where('products.created_at', '>', $filters['created_end']);
+            $builder->where('products.created_at', '<', $filters['created_end']);
         }
 
         if (isset($filters['active'])) {
@@ -195,9 +199,18 @@ class ProductRepo
 
         $sort  = $filters['sort']  ?? 'products.position';
         $order = $filters['order'] ?? 'desc';
-        $builder->orderBy($sort, $order);
+        if ($sort == 'product_skus.price') {
+            $builder->join('product_skus', function ($query) {
+                $query->on('product_skus.product_id', '=', 'products.id')
+                    ->where('is_default', true);
+            });
+        }
 
-        return $builder;
+        if (in_array($sort, ['products.sales', 'pd.name', 'products.position', 'product_skus.price'])) {
+            $builder->orderBy($sort, $order);
+        }
+
+        return hook_filter('repo.product.builder', $builder);
     }
 
     public static function parseFilterParamsAttr($attr)
@@ -302,17 +315,8 @@ class ProductRepo
             ->whereHas('description', function ($query) use ($name) {
                 $query->where('name', 'like', "%{$name}%");
             })->limit(10)->get();
-        $results = [];
-        foreach ($products as $product) {
-            $results[] = [
-                'id'     => $product->id,
-                'name'   => $product->description->name,
-                'status' => $product->active,
-                'image'  => $product->image,
-            ];
-        }
 
-        return $results;
+        return \Beike\Admin\Http\Resources\ProductSimple::collection($products)->jsonSerialize();
     }
 
     /**

@@ -105,7 +105,7 @@ return [
     'prohibited_unless'    => ':attribute 字段是被禁止的除非 :other 属于 :values。',
     'prohibits'            => ':attribute 字段是被禁止的 :other。',
     'regex'                => ':attribute 格式是无效的。',
-    'required'             => ':attribute 字段是必须的。',
+    'required'             => '请输入 :attribute',
     'required_if'          => ':attribute 字段是必须的当 :other 是 :value。',
     'required_unless'      => ':attribute 字段是必须的，除非 :other 是在 :values 中。',
     'required_with'        => ':attribute 字段是必须的当 :values 是存在的。',
@@ -156,8 +156,10 @@ return [
     */
 
     'attributes'           => [
-        'descriptions.en.title'    => '英文标题',
-        'descriptions.zh_cn.title' => '中文标题',
+        'descriptions.en.title'      => '英文标题',
+        'descriptions.zh_cn.title'   => '中文标题',
+        'descriptions.en.summary'    => '英文副标题',
+        'descriptions.zh_cn.summary' => '中文副标题',
 
         'tax_rate'                 => [
             'name' => '税种名称',

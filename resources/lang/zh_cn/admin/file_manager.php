@@ -35,6 +35,10 @@ return [
     'show_pc'                             => '请到PC端操作',
     'verify_select_image'                 => '请选择图片',
     'verify_select_video'                 => '请选择视频',
+    'copy_link'                           => '复制链接',
+    'copy_success'                        => '复制成功',
+    'drop_file_hint'                      => '是否将<span class="drop-hint"></span>个文件移动到<span class="drop-hint"></span>内?',
+    'drop_folder_hint'                    => '是否将<span class="drop-hint"></span>移动到<span class="drop-hint"></span>内?',
 
     'confirm_delete_file'       => '是否要删除选中文件',
     'confirm_delete_folder'     => '正在进行删除文件夹操作，文件夹内所有文件都将被删除，是否确认？',
@@ -44,4 +48,7 @@ return [
     'uploading'                 => '上传中',
     'upload_fail'               => '上传失败',
     'file_manager'              => '图片管理器',
+    'target_dir_exist'          => '目标目录已存在',
+    'rename_failed'             => '改名失败，清检查文件名是否合法或是否重名',
+    'source_dir_empty'          => '源目录不能为空',
 ];

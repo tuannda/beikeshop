@@ -51,7 +51,7 @@
                       </div>
                     </td>
                     <td>
-                      <div class="name text-truncate-2 mb-1 fw-bold" v-text="product.name"></div>
+                      <a class="name text-truncate-2 mb-1 text-black fw-bold" :href="'products/' + product.product_id" v-text="product.name"></a>
                       <div class="text-size-min text-muted mb-1">@{{ product.variant_labels }}</div>
                       <div class="price text-muted">@{{ product.price_format }}</div>
                     </td>
@@ -89,7 +89,9 @@
                   <li class="list-group-item"><span>{{ __('shop/carts.selected') }}</span><span>@{{ total_quantity }}</span></li>
                   <li class="list-group-item border-bottom-0"><span>{{ __('shop/carts.product_total') }}</span><span class="total-price">@{{ amount_format }}</span></li>
                   <li class="list-group-item d-grid gap-2 mt-3 border-bottom-0">
+                    @hookwrapper('cart.confirm')
                     <button type="button" class="btn btn-primary fs-5 fw-bold" @click="checkedBtnToCheckout">{{ __('shop/carts.to_checkout') }}</button>
+                    @endhookwrapper
                   </li>
                 </ul>
               </div>
@@ -135,7 +137,7 @@
           },
           set(val) {
             this.products.map(e => e.selected = val)
-            this.selectedBtnSelected()
+            this.allSelectedBtn()
           }
         },
 
@@ -170,14 +172,17 @@
         },
 
         checkedCartTr(index) {
-          this.selectedBtnSelected();
+          const selected = this.products[index].selected;
+          const cart_id = this.products[index].cart_id;
+          $http.post(`/carts/${selected ? 'select' : 'unselect'}`, {cart_ids: [cart_id]}, {hload: true}).then((res) => {
+            this.setUpdateData(res);
+          })
         },
 
-        selectedBtnSelected() {
-          const self = this;
-          const cart_ids = this.products.filter(e => e.selected).map(x => x.cart_id)
+        allSelectedBtn() {
+          const cart_ids = this.products.map(x => x.cart_id)
 
-          $http.post(`/carts/select`, {cart_ids: cart_ids}, {hload: true}).then((res) => {
+          $http.post(`/carts/${this.allSelected ? 'select' : 'unselect'}`, {cart_ids: cart_ids}, {hload: true}).then((res) => {
             this.setUpdateData(res);
           })
         },

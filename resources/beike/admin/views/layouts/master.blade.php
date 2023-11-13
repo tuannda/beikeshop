@@ -34,16 +34,24 @@
     <x-admin-sidebar />
     <div id="content">
       <div class="page-title-box py-1 d-flex align-items-center justify-content-between">
-        <h5 class="page-title">@yield('title')</h5>
+        <div class="d-flex">
+          <h5 class="page-title">@yield('title')</h5>
+          <div class="ms-4 text-danger">@yield('page-title-after')</div>
+        </div>
         <div>@yield('page-title-right')</div>
       </div>
       <div class="container-fluid p-0">
-        @yield('content')
+        <div class="content-info">@yield('content')</div>
 
-        <p class="text-center text-secondary mt-5">
+        <div class="page-bottom-btns">
+          @yield('page-bottom-btns')
+        </div>
+
+        <p class="text-center text-secondary mt-5" id="copyright-text">
             <a href="https://beikeshop.com/" class="ms-2" target="_blank">BeikeShop</a>
             v{{ config('beike.version') }}({{ config('beike.build') }})
             &copy; {{ date('Y') }} All Rights Reserved</p>
+
       </div>
     </div>
   </div>
@@ -56,15 +64,16 @@
       file_manager: '{{ __('admin/file_manager.file_manager') }}',
       error_form: '{{ __('common.error_form') }}',
       text_hint: '{{ __('common.text_hint') }}',
+      translate_form: '{{ __('admin/common.translate_form') }}',
     }
 
     const config = {
       beike_version: '{{ config('beike.version') }}',
       api_url: '{{ config('beike.api_url') }}',
       app_url: '{{ config('app.url') }}',
+      has_license: {{ json_encode(check_license()) }}
     }
   </script>
   @stack('footer')
 </body>
-
 </html>

@@ -6,6 +6,7 @@ use Beike\Models\ProductSku;
 use Beike\Shop\Http\Requests\CartRequest;
 use Beike\Shop\Services\CartService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -29,19 +30,47 @@ class CartController extends Controller
      *
      * POST /carts/select {cart_ids:[1, 2]}
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function select(Request $request): array
+    public function select(Request $request): JsonResponse
     {
-        $cartIds  = $request->get('cart_ids');
-        $customer = current_customer();
-        CartService::select($customer, $cartIds);
+        try {
+            $cartIds  = $request->get('cart_ids');
+            $customer = current_customer();
+            CartService::select($customer, $cartIds);
 
-        $data = CartService::reloadData();
+            $data = CartService::reloadData();
 
-        $data = hook_filter('cart.select.data', $data);
+            $data = hook_filter('cart.select.data', $data);
 
-        return json_success(trans('common.updated_success'), $data);
+            return json_success(trans('common.updated_success'), $data);
+        } catch (\Exception $e) {
+            return json_fail($e->getMessage());
+        }
+    }
+
+    /**
+     * 不选中购物车商品
+     *
+     * POST /carts/unselect {cart_ids:[1, 2]}
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function unselect(Request $request): JsonResponse
+    {
+        try {
+            $cartIds  = $request->get('cart_ids');
+            $customer = current_customer();
+            CartService::unselect($customer, $cartIds);
+
+            $data = CartService::reloadData();
+
+            $data = hook_filter('cart.select.data', $data);
+
+            return json_success(trans('common.updated_success'), $data);
+        } catch (\Exception $e) {
+            return json_fail($e->getMessage());
+        }
     }
 
     /**
@@ -66,7 +95,7 @@ class CartController extends Controller
 
             $cart = CartService::add($sku, $quantity, $customer);
             if ($buyNow) {
-                CartService::select($customer, [$cart->id]);
+                CartService::select($customer, [$cart->id], true);
             }
 
             $cart = hook_filter('cart.store.data', $cart);
@@ -81,9 +110,9 @@ class CartController extends Controller
      * PUT /carts/{cart_id} {sku_id:1, quantity: 2}
      * @param CartRequest $request
      * @param $cartId
-     * @return array
+     * @return JsonResponse
      */
-    public function update(CartRequest $request, $cartId): array
+    public function update(CartRequest $request, $cartId): JsonResponse
     {
         $customer = current_customer();
         $quantity = (int) $request->get('quantity');
@@ -100,9 +129,9 @@ class CartController extends Controller
      * DELETE /carts/{cart_id}
      * @param Request $request
      * @param $cartId
-     * @return array
+     * @return JsonResponse
      */
-    public function destroy(Request $request, $cartId): array
+    public function destroy(Request $request, $cartId): JsonResponse
     {
         $customer = current_customer();
         CartService::delete($customer, $cartId);

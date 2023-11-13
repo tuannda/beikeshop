@@ -13,11 +13,11 @@
         </p>
         <p style="line-height: 24px; margin: 6px 0px 0px; overflow-wrap: break-word; word-break: break-all;">
           <span style="color: rgb(51, 51, 51); font-size: 14px;">{{ __('mail.order_update_status', ['number' => $order->number]) }}：
-            <span style="font-weight: bold;">{{ __("common.order.{$order->status}") }}</span>
+            <span style="font-weight: bold;">{{ $order->status_format }}</span>
           </span>
         </p>
 
-        <p style="font-size: 13px;font-weight:bold;margin-bottom:6px;color: #333;">{{ __('shop/account.order.order_info.order_items') }}：</p>
+        <p style="font-size: 13px;font-weight:bold;margin-bottom:6px;color: #333;">{{ __('shop/account/order_info.order_items') }}：</p>
         <table style="width:100%;font-weight:300;margin-top:10px; margin-bottom:10px;border-collapse:collapse; ">
           <thead>
             <tr>
@@ -63,7 +63,7 @@
 
         <p style="font-size: 14px; color: rgb(51, 51, 51); line-height: 24px; margin: 6px 0px 0px; word-wrap: break-word; word-break: break-all;">
           <a href="{{ shop_route('orders.show', ['number' => $order->number, 'email' => $order->email]) }}" title="" style="font-size: 16px; line-height: 45px; display: block; background-color: #fd560f; color: rgb(255, 255, 255); text-align: center; text-decoration: none; margin-top: 20px; border-radius: 3px;">
-            {{ __('shop/account.order.order_success.view_order') }}
+            {{ __('shop/account.order/order_success.view_order') }}
           </a>
         </p>
 

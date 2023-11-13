@@ -9,7 +9,7 @@
   <script src="{{ asset('vendor/swiper/swiper-bundle.min.js') }}"></script>
   <script src="{{ asset('vendor/zoom/jquery.zoom.min.js') }}"></script>
   <link rel="stylesheet" href="{{ asset('vendor/swiper/swiper-bundle.min.css') }}">
-  @if ($product['video'])
+  @if ($product['video'] && strpos($product['video'], '<iframe') === false)
   <script src="{{ asset('vendor/video/video.min.js') }}"></script>
   <link rel="stylesheet" href="{{ asset('vendor/video/video-js.min.css') }}">
   @endif
@@ -32,7 +32,7 @@
             <div class="left {{ $iframeClass }}"  v-if="images.length">
               <div class="swiper" id="swiper">
                 <div class="swiper-wrapper">
-                  <div class="swiper-slide" :class="!index ? 'active' : ''" v-for="image, index in images">
+                  <div class="swiper-slide" :class="!index ? 'active' : ''" v-for="image, index in images" :key="index">
                     <a href="javascript:;" :data-image="image.preview" :data-zoom-image="image.popup">
                       <img :src="image.thumb" class="img-fluid">
                     </a>
@@ -46,13 +46,13 @@
             </div>
             <div class="right" id="zoom">
               @include('product.product-video')
-              <img :src="images.length ? images[0].preview : '{{ asset('image/placeholder.png') }}'" class="img-fluid">
+              <div class="product-img"><img :src="images.length ? images[0].preview : '{{ asset('image/placeholder.png') }}'" class="img-fluid"></div>
             </div>
           @else
             @include('product.product-video')
             <div class="swiper" id="swiper-mobile">
               <div class="swiper-wrapper">
-                <div class="swiper-slide" v-for="image, index in images">
+                <div class="swiper-slide d-flex align-items-center justify-content-center" v-for="image, index in images" :key="index">
                   <img :src="image.preview" class="img-fluid">
                 </div>
               </div>
@@ -114,7 +114,6 @@
           </div>
           @endif
 
-
           <div class="variables-wrap mb-4" v-if="source.variables.length">
             <div class="variable-group mb-2" v-for="variable, variable_index in source.variables" :key="variable_index">
               <p class="mb-2">@{{ variable.name }}</p>
@@ -123,9 +122,12 @@
                   v-for="value, value_index in variable.values"
                   @click="checkedVariableValue(variable_index, value_index, value)"
                   :key="value_index"
-                  :class="[value.selected ? 'selected' : '', value.disabled ? 'disabled' : '']">
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  :title="value.image ? value.name : ''"
+                  :class="[value.selected ? 'selected' : '', value.disabled ? 'disabled' : '', value.image ? 'is-v-image' : '']">
                   <span class="image" v-if="value.image"><img :src="value.image" class="img-fluid"></span>
-                  @{{ value.name }}
+                  <span v-else>@{{ value.name }}</span>
                 </div>
               </div>
             </div>
@@ -163,7 +165,6 @@
                 ><i class="bi bi-bag-fill me-1"></i>{{ __('shop/products.buy_now') }}
               </button>
               @endhookwrapper
-
               @hook('product.detail.buy.after')
             </div>
 
@@ -196,6 +197,7 @@
           {{ __('admin/attribute.index') }}
         </a>
         @endif
+        @hook('product.tab.after.link')
       </div>
       <div class="tab-content">
         <div class="tab-pane fade show active" id="product-description" role="tabpanel">
@@ -218,6 +220,7 @@
             @endforeach
           </table>
         </div>
+        @hook('product.tab.after.pane')
       </div>
     </div>
   </div>
@@ -473,6 +476,12 @@
       $('#zoom').trigger('zoom.destroy');
       $('#zoom').zoom({url: $('#swiper a').attr('data-zoom-image')});
     });
+
+    const windowWidth = $(window).width() - 24;
+
+    if ($(window).width() < 768) {
+      $('.swiper-wrapper').css('height', windowWidth + 'px');
+    }
 
     const selectedVariantsIndex = app.selectedVariantsIndex;
     const variables = app.source.variables;

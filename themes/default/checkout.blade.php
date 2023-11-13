@@ -43,24 +43,33 @@
               </div>
             </div>
 
-            <div class="checkout-black">
-              <h5 class="checkout-title">{{ __('shop/checkout.delivery_method') }}</h5>
-              <div class="radio-line-wrap" id="shipping-methods-wrap">
-                @foreach ($shipping_methods as $methods)
-                  @foreach ($methods['quotes'] as $shipping)
-                  <div class="radio-line-item {{ $shipping['code'] == $current['shipping_method_code'] ? 'active':'' }}" data-key="shipping_method_code" data-value="{{ $shipping['code'] }}">
-                    <div class="left">
-                      <span class="radio"></span>
-                      <img src="{{ $shipping['icon'] }}" class="img-fluid">
+            @if ($shipping_require)
+              <div class="checkout-black">
+                <h5 class="checkout-title">{{ __('shop/checkout.delivery_method') }}</h5>
+                <div class="radio-line-wrap" id="shipping-methods-wrap">
+                  @foreach ($shipping_methods as $methods)
+                    @foreach ($methods['quotes'] as $shipping)
+                    <div class="radio-line-item {{ $shipping['code'] == $current['shipping_method_code'] ? 'active':'' }}" data-key="shipping_method_code" data-value="{{ $shipping['code'] }}">
+                      <div class="left">
+                        <span class="radio"></span>
+                        <img src="{{ $shipping['icon'] }}" class="img-fluid">
+                      </div>
+                      <div class="right ms-2">
+                        <div class="title">{{ $shipping['name'] }}</div>
+                        <div class="sub-title">{!! $shipping['description'] !!}</div>
+                        <div class="mt-2">{!! $shipping['html'] ?? '' !!}</div>
+                      </div>
                     </div>
-                    <div class="right ms-2">
-                      <div class="title">{{ $shipping['name'] }}</div>
-                      <div class="sub-title">{!! $shipping['description'] !!}</div>
-                      <div class="mt-2">{!! $shipping['html'] ?? '' !!}</div>
-                    </div>
-                  </div>
+                    @endforeach
                   @endforeach
-                @endforeach
+                </div>
+              </div>
+            @endif
+
+            <div class="checkout-black">
+              <h5 class="checkout-title">{{ __('shop/checkout.comment') }}</h5>
+              <div class="comment-wrap" id="comment-wrap">
+                <textarea rows="5" type="text" class="form-control" name="comment" placeholder="{{ __('shop/checkout.comment') }}">{{ old('comment', $comment ?? '') }}</textarea>
               </div>
             </div>
 
@@ -93,7 +102,7 @@
                 @foreach ($carts['carts'] as $cart)
                   <div class="item">
                     <div class="image">
-                      <div class="img border d-flex align-items-center justify-content-center wh-40 me-2">
+                      <div class="img border d-flex align-items-center justify-content-center wh-50 me-2">
                         <img src="{{ image_resize($cart['image'], 100, 100) }}" class="img-fluid">
                       </div>
                       <div class="name">
@@ -117,7 +126,9 @@
                 @endforeach
               </ul>
               <div class="d-grid gap-2 mt-3">
+                @hookwrapper('checkout.confirm')
                 <button class="btn btn-primary fw-bold fs-5" type="button" id="submit-checkout">{{ __('shop/checkout.submit_order') }}</button>
+                @endhookwrapper
               </div>
 
               @hook('checkout.total.footer')
@@ -143,17 +154,24 @@
     });
 
     $('#submit-checkout').click(function(event) {
-      if (!config.isLogin && checkoutAddressApp.source.guest_shipping_address === null) {
+      const address = config.isLogin ? checkoutAddressApp.form.shipping_address_id : checkoutAddressApp.source.guest_shipping_address;
+      const payment = config.isLogin ? checkoutAddressApp.form.payment_address_id : checkoutAddressApp.source.guest_payment_address;
+
+      if (checkoutAddressApp.shippingRequired && !address) {
+        layer.msg('{{ __('shop/checkout.error_address') }}', ()=>{})
+        return;
+      }
+
+      if (!payment) {
         layer.msg('{{ __('shop/checkout.error_payment_address') }}', ()=>{})
         return;
       }
 
-      if (config.isLogin && !checkoutAddressApp.form.payment_address_id) {
-        layer.msg('{{ __('shop/checkout.error_payment_address') }}', ()=>{})
-        return;
+      let data = {
+        comment: $('textarea[name=comment]').val()
       }
 
-      $http.post('/checkout/confirm').then((res) => {
+      $http.post('/checkout/confirm',data).then((res) => {
         location = 'orders/' + res.number + '/pay?type=create'
       })
     });

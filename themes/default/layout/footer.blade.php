@@ -32,8 +32,9 @@
       <div class="row">
         <div class="col-12 col-md-3">
           <div class="footer-content-left">
-            <div class="logo"><a href="http://"><img
-                  src="{{ image_origin($footer_content['content']['intro']['logo']) }}" class="img-fluid"></a></div>
+            @if ($footer_content['content']['intro']['logo'] ?? false)
+              <div class="logo"><a href="{{ shop_route('home.index') }}"><img src="{{ image_origin($footer_content['content']['intro']['logo']) }}" class="img-fluid"></a></div>
+            @endif
             <div class="text tinymce-format-p">{!! $footer_content['content']['intro']['text'][$locale] ?? '' !!}</div>
           </div>
         </div>
@@ -85,7 +86,10 @@
       <div class="row align-items-center">
         <div class="col">
           <div class="d-flex">
-            Powered By&nbsp;<a href="https://beikeshop.com/" target="_blank" rel="noopener">BeikeShop</a>&nbsp;
+            <!-- 删除版权信息, 请先购买授权 https://beikeshop.com/vip/subscription -->
+            @if(!check_license())
+              Powered By&nbsp;<a href="https://beikeshop.com/" target="_blank" rel="noopener">BeikeShop</a>&nbsp;-&nbsp;
+            @endif
             {!! $footer_content['bottom']['copyright'][$locale] ?? '' !!}
           </div>
         </div>

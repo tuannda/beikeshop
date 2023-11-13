@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', system_setting('base.meta_title', 'BeikeShop开源好用的跨境电商系统 - BeikeShop官网') . ' Powered By BeikeShop')</title>
+  <title>@yield('title', system_setting('base.meta_title', 'BeikeShop开源好用的跨境电商系统 - BeikeShop官网'))</title>
   <meta name="keywords" content="@yield('keywords', system_setting('base.meta_keywords'))">
   <meta name="description" content="@yield('description', system_setting('base.meta_description'))">
   <meta name="generator" content="BeikeShop v{{ config('beike.version') }}({{ config('beike.build') }})">
@@ -24,21 +24,21 @@
   @hook('layout.header.code')
   @stack('header')
 </head>
-<body class="@yield('body-class')">
-  @if (!request('iframe'))
+<body class="@yield('body-class') {{ request('_from') }}">
+  @if (!request('iframe') && request('_from') != 'app')
     @include('layout.header')
   @endif
 
   @yield('content')
 
-  @if (!request('iframe'))
+  @if (!request('iframe') && request('_from') != 'app')
     @include('layout.footer')
   @endif
 
   <script>
     const config = {
       isLogin: !!{{ current_customer()->id ?? 'null' }},
-      guestCheckout: !!{{ system_setting('base.guest_checkout', 1) }}
+      guestCheckout: !!{{ system_setting('base.guest_checkout', 1) }},
     }
 
     // 如果页面使用了ElementUI，且当前语言不是中文，则加载对应的语言包

@@ -16,6 +16,7 @@ use Beike\Repositories\PluginRepo;
 use Beike\Repositories\SettingRepo;
 use Exception;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PluginController extends Controller
@@ -137,10 +138,22 @@ class PluginController extends Controller
         return view('admin::pages.plugins.index', $data);
     }
 
+    public function translator()
+    {
+        $type            = 'translator';
+        $plugins         = app('plugin')->getPlugins();
+        $plugins         = $plugins->where('type', $type);
+        $data['plugins'] = array_values(PluginResource::collection($plugins)->jsonSerialize());
+        $data['type']    = $type;
+        $data            = hook_filter('admin.plugin.index.data', $data);
+
+        return view('admin::pages.plugins.index', $data);
+    }
+
     /**
      * 上传插件
      */
-    public function import(Request $request): array
+    public function import(Request $request): JsonResponse
     {
         $zipFile = $request->file('file');
         app('plugin')->import($zipFile);
@@ -151,29 +164,38 @@ class PluginController extends Controller
     /**
      * @param Request $request
      * @param $code
-     * @return array
+     * @return JsonResponse
      * @throws Exception
      */
-    public function install(Request $request, $code): array
+    public function install(Request $request, $code): JsonResponse
     {
-        $plugin = app('plugin')->getPluginOrFail($code);
-        PluginRepo::installPlugin($plugin);
+        try {
+            $plugin = app('plugin')->getPluginOrFail($code);
+            PluginRepo::installPlugin($plugin);
 
-        return json_success(trans('common.success'));
+            return json_success(trans('common.success'));
+        } catch (\Exception $e) {
+            return json_fail($e->getMessage());
+        }
     }
 
     /**
      * @param Request $request
      * @param $code
-     * @return array
+     * @return JsonResponse
      * @throws Exception
      */
-    public function uninstall(Request $request, $code): array
+    public function uninstall(Request $request, $code): JsonResponse
     {
-        $plugin = app('plugin')->getPluginOrFail($code);
-        PluginRepo::uninstallPlugin($plugin);
+        try {
 
-        return json_success(trans('common.success'));
+            $plugin = app('plugin')->getPluginOrFail($code);
+            PluginRepo::uninstallPlugin($plugin);
+
+            return json_success(trans('common.success'));
+        } catch (\Exception $e) {
+            return json_fail($e->getMessage());
+        }
     }
 
     /**
@@ -184,18 +206,28 @@ class PluginController extends Controller
      */
     public function edit(Request $request, $code): View
     {
-        $plugin     = app('plugin')->getPluginOrFail($code);
-        $columnView = $plugin->getColumnView();
-        $view       = $columnView ?: 'admin::pages.plugins.form';
+        try {
+            $plugin     = app('plugin')->getPluginOrFail($code);
+            $columnView = $plugin->getColumnView();
+            $view       = $columnView ?: 'admin::pages.plugins.form';
 
-        $data = [
-            'view'   => $view,
-            'plugin' => $plugin,
-        ];
+            $data = [
+                'view'   => $view,
+                'plugin' => $plugin,
+            ];
+            $data = hook_filter('admin.plugin.edit.data', $data);
 
-        $data = hook_filter('admin.plugin.edit.data', $data);
+            return view($view, $data);
+        } catch (\Exception $e) {
+            $plugin = app('plugin')->getPlugin($code);
+            $data   = [
+                'error'       => $e->getMessage(),
+                'plugin_code' => $code,
+                'plugin'      => $plugin,
+            ];
 
-        return view($view, $data);
+            return view('admin::pages.plugins.error', $data);
+        }
     }
 
     /**
@@ -228,15 +260,18 @@ class PluginController extends Controller
     /**
      * @param Request $request
      * @param $code
-     * @return array
-     * @throws Exception
+     * @return JsonResponse
      */
-    public function updateStatus(Request $request, $code): array
+    public function updateStatus(Request $request, $code): JsonResponse
     {
-        app('plugin')->getPluginOrFail($code);
-        $status = $request->get('status');
-        SettingRepo::update('plugin', $code, ['status' => $status]);
+        try {
+            app('plugin')->getPluginOrFail($code);
+            $status = $request->get('status');
+            SettingRepo::update('plugin', $code, ['status' => $status]);
 
-        return json_success(trans('common.updated_success'));
+            return json_success(trans('common.updated_success'));
+        } catch (\Exception $e) {
+            return json_fail($e->getMessage());
+        }
     }
 }

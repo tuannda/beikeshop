@@ -870,6 +870,7 @@ class ThemeSeeder extends Seeder
                             "zh_cn" => "",
                             "en" => ""
                         ],
+                        "editableTabsValue" => "0",
                         "tabs" => [
                             [
                                 "title" => [
@@ -1174,8 +1175,8 @@ class ThemeSeeder extends Seeder
             ],
             "bottom" => [
                 "copyright" => [
-                    "en" => "<div>&nbsp; - Chengdu Guangda Network Technology &copy; 2023</div>",
-                    "zh_cn" => "<div class=\"\">&nbsp; - 成都光大网络科技 &copy; 2023</div>"
+                    "en" => "<div>Chengdu Guangda Network Technology &copy; 2023</div>",
+                    "zh_cn" => "<div>成都光大网络科技 &copy; 2023</div>"
                 ],
                 "image" => "catalog/demo/banner/pay_icons.png"
             ]

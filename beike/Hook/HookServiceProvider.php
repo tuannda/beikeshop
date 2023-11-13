@@ -5,6 +5,7 @@ namespace Beike\Hook;
 use Beike\Hook\Console\HookListeners;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class HookServiceProvider extends ServiceProvider
 {
@@ -19,7 +20,6 @@ class HookServiceProvider extends ServiceProvider
         });
     }
 
-
     public function boot()
     {
         $this->bootHookDirectives();
@@ -33,10 +33,11 @@ class HookServiceProvider extends ServiceProvider
     protected function bootHookDirectives()
     {
         Blade::directive('hook', function ($parameter) {
-            $parameter = trim($parameter, '()');
+            $parameter  = trim($parameter, '()');
             $parameters = explode(',', $parameter);
 
             $name = trim($parameters[0], "'");
+            $definedVars = $this->parseParameters($parameters);
 
             return ' <?php
                 $__definedVars = (get_defined_vars()["__data"]);
@@ -44,13 +45,13 @@ class HookServiceProvider extends ServiceProvider
                 {
                     $__definedVars = [];
                 }
+                '. $definedVars .'
                 $output = \Hook::getHook("' . $name . '",["data"=>$__definedVars],function($data) { return null; });
                 if ($output)
                 echo $output;
                 ?>';
         });
     }
-
 
     /**
      * 添加 blade wrapper hook 标签
@@ -60,9 +61,9 @@ class HookServiceProvider extends ServiceProvider
     protected function bootWrapperHookDirectives()
     {
         Blade::directive('hookwrapper', function ($parameter) {
-            $parameter = trim($parameter, '()');
+            $parameter  = trim($parameter, '()');
             $parameters = explode(',', $parameter);
-            $name = trim($parameters[0], "'");
+            $name       = trim($parameters[0], "'");
 
             return ' <?php
                     $__hook_name="' . $name . '";
@@ -85,5 +86,24 @@ class HookServiceProvider extends ServiceProvider
                 echo $output;
                 ?>';
         });
+    }
+
+    /**
+     * Parse parameters from Blade
+     *
+     * @param $parameters
+     * @return string
+     */
+    protected function parseParameters($parameters):string
+    {
+        $definedVars = '';
+        foreach ($parameters as $paraItem) {
+            $paraItem = trim($paraItem);
+            if (Str::startsWith($paraItem,'$')) {
+                $paraKey = trim($paraItem,  '$');
+                $definedVars .= '$__definedVars["'.$paraKey.'"] = $'.$paraKey.';';
+            }
+        }
+        return $definedVars;
     }
 }

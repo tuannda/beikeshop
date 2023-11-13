@@ -10,8 +10,9 @@
   <script src="{{ asset('vendor/tinymce/5.9.1/tinymce.min.js') }}"></script>
 @endpush
 
-@section('page-title-right')
-  <button type="button" class="btn btn-lg btn-primary submit-form">{{ __('common.save') }}</button>
+@section('page-bottom-btns')
+  <button type="button" class="btn w-min-100 btn-lg btn-primary submit-form">{{ __('common.save') }}</button>
+  <button class="btn btn-lg btn-default w-min-100 ms-3" onclick="bk.back()">{{ __('common.return') }}</button>
 @endsection
 
 @section('content')
@@ -81,15 +82,37 @@
             </x-admin::form.row>
 
             <x-admin::form.row title="{{ __('product.video') }}">
-              <div class="d-flex align-items-end">
-                <div class="set-product-img wh-80 rounded-2 me-2" @click="addProductVideo">
-                  <i v-if="form.video.path" class="bi bi-play-circle fs-1"></i>
-                  <i v-else class="bi bi-plus fs-1 text-muted"></i>
+              <div class="wp-400 border">
+                <div class="nav nav-tabs video-nav-tabs" role="tablist">
+                  <button :class="['nav-link rounded-0', form.video.videoType == 'local' ? 'active' : '']" @click="videoTypeChange('local')" data-bs-toggle="tab" data-bs-target="#nav-v-local" type="button">{{ __('admin/product.video_local') }}</button>
+                  <button :class="['nav-link rounded-0', form.video.videoType == 'iframe' ? 'active' : '']" @click="videoTypeChange('iframe')" data-bs-toggle="tab" data-bs-target="#nav-v-iframe" type="button">{{ __('admin/product.iframe_code') }}</button>
+                  <button :class="['nav-link rounded-0', form.video.videoType == 'custom' ? 'active' : '']" @click="videoTypeChange('custom')" data-bs-toggle="tab" data-bs-target="#nav-v-custom" type="button">{{ __('admin/builder.text_custom') }}</button>
                 </div>
+
+                <div class="tab-content p-3" id="nav-tabContent">
+                  <div :class="['tab-pane fade ', form.video.videoType == 'local' ? 'show active' : '']" id="nav-v-local">
+                    <div class="d-flex align-items-end">
+                      <div class="set-product-img wh-80 rounded-2 me-2" @click="addProductVideo">
+                        <i v-if="form.video.url" class="bi bi-play-circle fs-1"></i>
+                        <i v-else class="bi bi-plus fs-1 text-muted"></i>
+                      </div>
+                      <a v-if="form.video.url" target="_blank" :href="form.video.url">{{ __('common.view') }}</a>
+                      <span v-if="form.video.url" @click="deleteVideo" class="text-danger cursor-pointer ms-2">{{ __('common.delete') }}</span>
+                    </div>
+                    <div class="help-text mt-1">{{ __('admin/product.video_help') }}</div>
+                  </div>
+                  <div :class="['tab-pane fade', form.video.videoType == 'iframe' ? 'show active' : '']" id="nav-v-iframe">
+                    <textarea class="form-control" rows="3" placeholder="{{ __('admin/product.iframe_code') }}" v-model="form.video.iframe"></textarea>
+                    <div class="help-text mt-1">{{ __('admin/product.iframe_code_hint') }}</div>
+                  </div>
+                  <div :class="['tab-pane fade', form.video.videoType == 'custom' ? 'show active' : '']" id="nav-v-custom">
+                    <input class="form-control" placeholder="{{ __('admin/product.video_path') }}" v-model="form.video.custom">
+                    <div class="help-text mt-1">{{ __('admin/product.video_path_hint') }}</div>
+                  </div>
+                </div>
+
                 <input type="hidden" name="video" :value="form.video.path">
-                <a v-if="form.video.path" target="_blank" :href="form.video.url">{{ __('common.view') }}</a>
               </div>
-              <div class="help-text mb-1 mt-1">{{ __('admin/product.video_help') }}</div>
             </x-admin::form.row>
 
             <x-admin-form-input name="position" :title="__('common.sort_order')" :value="old('position', $product->position ?? '0')" />
@@ -113,6 +136,8 @@
             @endhookwrapper
 
             <x-admin-form-select :title="__('admin/tax_class.index')" name="tax_class_id" :value="old('tax_class_id', $product->tax_class_id ?? '')" :options="$tax_classes" key="id" label="title" />
+
+            <x-admin-form-select name="shipping" :title="__('admin/common.shipping')" :value="old('shipping', $product->shipping ?? 1)" :options="[['title' => __('common.yes'), 'id' => 1], ['title' => __('common.no'),'id' => 0]]" key="id" label="title" />
 
             <x-admin::form.row :title="__('admin/category.index')">
               <div class="wp-400 form-control" style="max-height: 240px;overflow-y: auto">
@@ -144,7 +169,7 @@
               <input type="hidden" name="variables" :value="JSON.stringify(form.variables)">
 
               <div class="row g-3 mb-3" v-if="editing.isVariable">
-                <label for="" class="wp-200 col-form-label text-end"></label>
+                <label class="wp-200 col-form-label text-end"></label>
                 <div class="col-auto wp-200-">
                   <div class="selectable-variants">
                     <div>
@@ -274,7 +299,7 @@
                               placeholder="{{ __('admin/product.origin_price') }}" required>
                               <span role="alert" class="invalid-feedback">{{ __('common.error_required', ['name' => __('admin/product.origin_price')]) }}</span>
                             </td>
-                            <td><input type="number" class="form-control" v-model="sku.cost_price" :name="'skus[' + skuIndex + '][cost_price]'"
+                            <td><input type="number" class="form-control" v-model="sku.cost_price" :name="'skus[' + skuIndex + '][cost_price]'" step="any"
                                 placeholder="{{ __('admin/product.cost_price') }}">
                             </td>
                             <td><input type="number" class="form-control" v-model="sku.quantity" :name="'skus[' + skuIndex + '][quantity]'"
@@ -296,7 +321,7 @@
                 <x-admin-form-input name="skus[0][sku]" title="sku" :value="old('skus.0.sku', $product->skus[0]->sku ?? '')" required />
                 <x-admin-form-input name="skus[0][price]" type="number" :title="__('admin/product.price')" :value="old('skus.0.price', $product->skus[0]->price ?? '')" step="any" required />
                 <x-admin-form-input name="skus[0][origin_price]" type="number" :title="__('admin/product.origin_price')" :value="old('skus.0.origin_price', $product->skus[0]->origin_price ?? '')" step="any" required />
-                <x-admin-form-input name="skus[0][cost_price]" type="number" :title="__('admin/product.cost_price')" :value="old('skus.0.cost_price', $product->skus[0]->cost_price ?? '')" />
+                <x-admin-form-input name="skus[0][cost_price]" type="number" :title="__('admin/product.cost_price')" :value="old('skus.0.cost_price', $product->skus[0]->cost_price ?? '')" step="any" />
                 <x-admin-form-input name="skus[0][quantity]" type="number" :title="__('admin/product.quantity')" :value="old('skus.0.quantity', $product->skus[0]->quantity ?? '')" />
                 <input type="hidden" name="skus[0][variants]" placeholder="variants" value="">
                 <input type="hidden" name="skus[0][position]" placeholder="position" value="0">
@@ -389,9 +414,10 @@
                 @foreach ($languages as $language)
                 <div class="input-group w-max-600">
                   <span class="input-group-text wp-100">{{ $language['name'] }}</span>
-                  <textarea rows="2" type="text" name="descriptions[{{ $language['code'] }}][meta_keywords]" class="form-control wp-400" placeholder="Meta keywords">{{ old('meta_keywords', $product->descriptions->keyBy('locale')[$language->code]->meta_keywords ?? '') }}</textarea>
+                  <textarea rows="2" type="text" name="descriptions[{{ $language['code'] }}][meta_keywords]" class="form-control input-{{ $language['code'] }} wp-400" placeholder="Meta keywords">{{ old('meta_keywords', $product->descriptions->keyBy('locale')[$language->code]->meta_keywords ?? '') }}</textarea>
                 </div>
                 @endforeach
+                @include('admin::shared.auto-translation')
               </div>
             </x-admin::form.row>
             <x-admin::form.row title="Meta description">
@@ -399,9 +425,10 @@
                 @foreach ($languages as $language)
                 <div class="input-group w-max-600">
                   <span class="input-group-text wp-100">{{ $language['name'] }}</span>
-                  <textarea rows="2" type="text" name="descriptions[{{ $language['code'] }}][meta_description]" class="form-control wp-400" placeholder="Meta description">{{ old('meta_description', $product->descriptions->keyBy('locale')[$language->code]->meta_description ?? '') }}</textarea>
+                  <textarea rows="2" type="text" name="descriptions[{{ $language['code'] }}][meta_description]" class="form-control input-{{ $language['code'] }} wp-400" placeholder="Meta description">{{ old('meta_description', $product->descriptions->keyBy('locale')[$language->code]->meta_description ?? '') }}</textarea>
                 </div>
                 @endforeach
+                @include('admin::shared.auto-translation')
               </div>
             </x-admin::form.row>
 
@@ -450,7 +477,7 @@
         </div>
 
         <x-admin::form.row title="">
-          <button type="submit" @click="productsSubmit" class="btn d-none btn-primary btn-submit mt-3 btn-lg">{{ __('common.save') }}</button>
+          <button type="submit" class="btn d-none btn-primary btn-submit mt-3 btn-lg">{{ __('common.save') }}</button>
         </x-admin::form.row>
 
         <el-dialog
@@ -469,6 +496,7 @@
               >
                 <el-input size="mini" v-model="dialogVariables.form.name[lang.code]" placeholder="{{ __('common.name') }}"><template slot="prepend">@{{lang.name}}</template></el-input>
               </el-form-item>
+              @hook('admin.product.sku.edit.item.after')
             </el-form-item>
 
             <el-form-item>
@@ -515,6 +543,8 @@
         app.source.variables = [];
       }
 
+      app.videoSubmitFormat()
+
       setTimeout(() => {
         $(`form#app`).find('button[type="submit"]')[0].click();
       }, 0);
@@ -530,7 +560,10 @@
           images: @json(old('images', $product->images) ?? []),
           video: {
             path: @json(old('video', $product->video ?? '')),
-            url: @json(image_origin(old('video', $product->video ?? ''))),
+            url: '',
+            iframe: '',
+            custom: '',
+            videoType: 'local',
           },
           model: @json($product->skus[0]['model'] ?? ''),
           price: @json($product->skus[0]['price'] ?? ''),
@@ -585,7 +618,7 @@
           }
         },
 
-        rules: {}
+        rules: {},
       },
 
       computed: {
@@ -604,13 +637,15 @@
 
         skuIsEmpty() {
           return (this.form.skus.length && this.form.skus[0].variants.length) || ''
-        }
+        },
       },
 
       beforeMount() {
         if (this.form.variables.length) {
           this.variablesBatch.variables = this.form.variables.map((v, i) => '');
         }
+
+        this.videoDataFormat()
       },
 
       watch: {
@@ -639,11 +674,43 @@
       },
 
       methods: {
-        // 表单提交，检测是否开启多规格 做处理
-        productsSubmit() {
-          if (!this.editing.isVariable) {
-            this.source.variables = [];
+        // 视频数据格式化 type
+        videoDataFormat() {
+          const videoPath = @json(old('video', $product->video ?? ''));
+
+          if (videoPath.indexOf('<iframe') > -1) {
+            this.form.video.videoType = 'iframe';
+            this.form.video.iframe = videoPath;
+            return
           }
+
+          if (videoPath.indexOf('http') > -1) {
+            this.form.video.videoType = 'custom';
+            this.form.video.custom = videoPath;
+            return
+          }
+
+          this.form.video.path = videoPath;
+
+          if (videoPath) {
+            this.form.video.url = @json(image_origin(old('video', $product->video ?? '')));
+          }
+        },
+
+        // 视频数据提交的时候格式化
+        videoSubmitFormat() {
+          if (this.form.video.videoType == 'iframe')  {
+            this.form.video.path = this.form.video.iframe;
+          }
+
+          if (this.form.video.videoType == 'custom')  {
+            this.form.video.path = this.form.video.custom;
+          }
+        },
+
+        deleteVideo() {
+          this.form.video.path = ''
+          this.form.video.url = ''
         },
 
         relationsQuerySearch(keyword, cb) {
@@ -699,7 +766,8 @@
 
         addProductVideo() {
           bk.fileManagerIframe(images => {
-            this.form.video = {path: images[0].path, url: images[0].url}
+            this.form.video.path = images[0].path
+            this.form.video.url = images[0].url
           }, {mime: 'video'})
         },
 
@@ -810,6 +878,7 @@
 
           // 用 cartesian 跟新 this.form.skus 中的 variants
           cartesian.forEach((c, i) => {
+            c = !Array.isArray(c) ? [c] : c;
             this.form.skus[i].variants = c.map(e => e + '');
           })
         },
@@ -975,6 +1044,12 @@
           });
 
           this.remakeSkus()
+        },
+
+        videoTypeChange(code) {
+          this.form.video.videoType = code;
+          // this.form.video.path = '';
+          // this.form.video.url = '';
         },
       }
     });

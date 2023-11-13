@@ -101,6 +101,7 @@ Vue.component('rich-text-i18n', {
         toolbar: "undo redo | toolbarImageButton | lineheight | bold italic underline strikethrough | forecolor backcolor | fontselect fontsizeselect | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | formatpainter removeformat | charmap emoticons | preview | template link anchor | code",
         toolbar_items_size: 'small',
         image_caption: true,
+        imagetools_toolbar: '',
         toolbar_mode: 'wrap',
         font_formats:
           "微软雅黑='Microsoft YaHei';黑体=黑体;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Georgia=georgia,palatino;Helvetica=helvetica;Times New Roman=times new roman,times;Verdana=verdana,geneva",
@@ -115,9 +116,9 @@ Vue.component('rich-text-i18n', {
                 if (images.length) {
                   images.forEach(e => {
                     if (e.mime == 'video/mp4') {
-                      ed.insertContent(`<video src='/${e.path}' controls loop muted class="img-fluid" />`);
+                      ed.insertContent(`<video src='${e.path}' controls loop muted class="img-fluid" />`);
                     } else {
-                      ed.insertContent(`<img src='/${e.path}' class="img-fluid" />`);
+                      ed.insertContent(`<img src='${e.path}' class="img-fluid" />`);
                     }
                   });
                 }

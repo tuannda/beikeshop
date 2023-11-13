@@ -59,6 +59,7 @@ Route::prefix($adminName)
                 // 商品分类
                 Route::middleware('can:categories_index')->get('categories/autocomplete', [Controllers\CategoryController::class, 'autocomplete'])->name('categories.autocomplete');
                 Route::middleware('can:categories_show')->get('categories/{category}/name', [Controllers\CategoryController::class, 'name'])->name('categories.name');
+                Route::middleware('can:categories_show')->get('categories/{category}/products', [Controllers\CategoryController::class, 'getProducts'])->name('categories.products');
                 Route::middleware('can:categories_index')->get('categories', [Controllers\CategoryController::class, 'index'])->name('categories.index');
                 Route::middleware('can:categories_create')->get('categories/create', [Controllers\CategoryController::class, 'create'])->name('categories.create');
                 Route::middleware('can:categories_create')->post('categories', [Controllers\CategoryController::class, 'store'])->name('categories.store');
@@ -121,6 +122,9 @@ Route::prefix($adminName)
                 Route::middleware('can:design_menu_index')->get('design_menu/builder', [Controllers\DesignMenuController::class, 'index'])->name('design_menu.index');
                 Route::middleware('can:design_menu_index')->put('design_menu/builder', [Controllers\DesignMenuController::class, 'update'])->name('design_menu.update');
 
+                Route::middleware('can:design_app_home_index')->get('design_app_home/builder', [Controllers\DesignAppController::class, 'index'])->name('design_app_home.index');
+                Route::middleware('can:design_app_home_index')->put('design_app_home/builder', [Controllers\DesignAppController::class, 'update'])->name('design_app_home.update');
+
                 // 模板主题
                 Route::middleware('can:theme_index')->get('themes', [Controllers\ThemeController::class, 'index'])->name('theme.index');
                 Route::middleware('can:theme_update')->put('themes/{code}', [Controllers\ThemeController::class, 'update'])->name('theme.update');
@@ -137,6 +141,9 @@ Route::prefix($adminName)
                 Route::middleware('can:file_manager_update')->post('file_manager/rename', [Controllers\FileManagerController::class, 'rename'])->name('file_manager.rename');
                 Route::middleware('can:file_manager_delete')->delete('file_manager/files', [Controllers\FileManagerController::class, 'destroyFiles'])->name('file_manager.delete_files');
                 Route::middleware('can:file_manager_delete')->delete('file_manager/directories', [Controllers\FileManagerController::class, 'destroyDirectories'])->name('file_manager.delete_directories');
+                Route::middleware('can:file_manager_update')->post('file_manager/move_directories', [Controllers\FileManagerController::class, 'moveDirectories'])->name('file_manager.move_directories');
+                Route::middleware('can:file_manager_update')->post('file_manager/move_files', [Controllers\FileManagerController::class, 'moveFiles'])->name('file_manager.move_files');
+                Route::middleware('can:file_manager_show')->get('file_manager/export', [Controllers\FileManagerController::class, 'exportZip'])->name('file_manager.export');
 
                 Route::get('logout', [Controllers\LogoutController::class, 'index'])->name('logout.index');
 
@@ -147,9 +154,12 @@ Route::prefix($adminName)
                 Route::middleware('can:languages_delete')->delete('languages/{id}', [Controllers\LanguageController::class, 'destroy'])->name('languages.destroy');
 
                 // 订单
+                Route::middleware('can:orders_restore')->put('orders/restore/{id}', [Controllers\OrderController::class, 'restore']);
+                Route::middleware('can:orders_trashed')->get('orders/trashed', [Controllers\OrderController::class, 'trashed'])->name('orders.trashed');
                 Route::middleware('can:orders_index')->get('orders', [Controllers\OrderController::class, 'index'])->name('orders.index');
                 Route::middleware('can:orders_export')->get('orders/export', [Controllers\OrderController::class, 'export'])->name('orders.export');
                 Route::middleware('can:orders_show')->get('orders/{order}', [Controllers\OrderController::class, 'show'])->name('orders.show');
+                Route::middleware('can:orders_delete')->delete('orders/{order}', [Controllers\OrderController::class, 'destroy'])->name('orders.destroy');
                 Route::middleware('can:orders_update_status')->put('orders/{order}/status', [Controllers\OrderController::class, 'updateStatus'])->name('orders.update_status');
                 Route::middleware('can:orders_update_status')->put('orders/{order}/shipments/{shipment}', [Controllers\OrderController::class, 'updateShipment'])->name('orders.update_shipment');
 
@@ -170,12 +180,15 @@ Route::prefix($adminName)
                 Route::middleware('can:plugins_index')->get('plugins/feature', [Controllers\PluginController::class, 'feature'])->name('plugins.feature');
                 Route::middleware('can:plugins_index')->get('plugins/language', [Controllers\PluginController::class, 'language'])->name('plugins.language');
                 Route::middleware('can:plugins_index')->get('plugins/theme', [Controllers\PluginController::class, 'theme'])->name('plugins.theme');
+                Route::middleware('can:plugins_index')->get('plugins/translator', [Controllers\PluginController::class, 'translator'])->name('plugins.translator');
 
                 // 插件市场
                 Route::middleware('can:marketing_index')->get('marketing', [Controllers\MarketingController::class, 'index'])->name('marketing.index');
                 Route::middleware('can:marketing_show')->get('marketing/{code}', [Controllers\MarketingController::class, 'show'])->name('marketing.show');
                 Route::middleware('can:marketing_buy')->post('marketing/{code}/buy', [Controllers\MarketingController::class, 'buy'])->name('marketing.buy');
+                Route::middleware('can:marketing_buy')->post('marketing/{id}/buy_service', [Controllers\MarketingController::class, 'buyService'])->name('marketing.buy_service');
                 Route::middleware('can:marketing_download')->post('marketing/{code}/download', [Controllers\MarketingController::class, 'download'])->name('marketing.download');
+                Route::middleware('can:marketing_show')->get('marketing/service_orders/{id}', [Controllers\MarketingController::class, 'serviceOrder'])->name('marketing.service_order');
 
                 // 文章
                 Route::middleware('can:pages_index')->get('pages', [Controllers\PagesController::class, 'index'])->name('pages.index');
@@ -204,15 +217,19 @@ Route::prefix($adminName)
                 Route::middleware('can:products_show')->get('products/{id}/name', [Controllers\ProductController::class, 'name'])->name('products.name');
                 Route::middleware('can:products_index')->get('products/names', [Controllers\ProductController::class, 'getNames'])->name('products.names');
                 Route::middleware('can:products_index')->get('products/autocomplete', [Controllers\ProductController::class, 'autocomplete'])->name('products.autocomplete');
+                Route::middleware('can:products_index')->get('products/latest', [Controllers\ProductController::class, 'latest'])->name('products.latest');
 
                 Route::middleware('can:products_update')->post('products/status', [Controllers\ProductController::class, 'updateStatus'])->name('products.update_status');
                 Route::middleware('can:products_delete')->delete('products/delete', [Controllers\ProductController::class, 'destroyByIds'])->name('products.batch_delete');
                 Route::middleware('can:products_index')->get('products', [Controllers\ProductController::class, 'index'])->name('products.index');
                 Route::middleware('can:products_create')->get('products/create', [Controllers\ProductController::class, 'create'])->name('products.create');
                 Route::middleware('can:products_create')->post('products', [Controllers\ProductController::class, 'store'])->name('products.store');
-                Route::middleware('can:products_update')->get('products/{product}/edit', [Controllers\ProductController::class, 'edit'])->name('products.edit');
+                Route::middleware('can:products_show')->get('products/{product}/edit', [Controllers\ProductController::class, 'edit'])->name('products.edit');
                 Route::middleware('can:products_update')->put('products/{product}', [Controllers\ProductController::class, 'update'])->name('products.update');
                 Route::middleware('can:products_delete')->delete('products/{product}', [Controllers\ProductController::class, 'destroy'])->name('products.destroy');
+
+                // 翻译
+                Route::post('translation', [Controllers\TranslationController::class, 'translateText'])->name('translation.translate');
 
                 // 区域组
                 Route::middleware('can:regions_index')->get('regions', [Controllers\RegionController::class, 'index'])->name('regions.index');

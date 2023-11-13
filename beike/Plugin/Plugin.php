@@ -11,6 +11,7 @@
 
 namespace Beike\Plugin;
 
+use Beike\Admin\Services\MarketingService;
 use Beike\Repositories\PluginRepo;
 use Beike\Repositories\SettingRepo;
 use Illuminate\Contracts\Support\Arrayable;
@@ -21,13 +22,14 @@ use Illuminate\Support\Str;
 class Plugin implements Arrayable, \ArrayAccess
 {
     public const TYPES = [
-        'payment',   // 支付方式
-        'shipping',  // 配送方式
-        'theme',     // 主题模板
-        'feature',   // 功能模块
-        'total',     // 订单金额
-        'social',    // 社交网络
-        'language',  // 语言翻译
+        'payment',    // 支付方式
+        'shipping',   // 配送方式
+        'theme',      // 主题模板
+        'feature',    // 功能模块
+        'total',      // 订单金额
+        'social',     // 社交网络
+        'language',   // 语言翻译
+        'translator', // 翻译工具
     ];
 
     protected $type;
@@ -143,7 +145,7 @@ class Plugin implements Arrayable, \ArrayAccess
      * 处理插件后台设置字段多语言 优先级: label > label_key
      * 有label字段则直接返回, label_key 则翻译
      */
-    public function handleLabel()
+    public function handleLabel(): void
     {
         $this->columns = collect($this->columns)->map(function ($item) {
             $item = $this->transLabel($item);
@@ -162,17 +164,17 @@ class Plugin implements Arrayable, \ArrayAccess
      * @param $item
      * @return mixed
      */
-    private function transLabel($item)
+    private function transLabel($item): mixed
     {
-        $labelKey = $item['label_key'] ?? '';
-        $label    = $item['label']     ?? '';
+        $labelKey = $item['label_key']    ?? '';
+        $label    = $item['label']        ?? '';
         if (empty($label) && $labelKey) {
             $languageKey   = "{$this->dirName}::{$labelKey}";
             $item['label'] = trans($languageKey);
         }
 
-        $descriptionKey = $item['description_key'] ?? '';
-        $description    = $item['description']     ?? '';
+        $descriptionKey = $item['description_key']    ?? '';
+        $description    = $item['description']        ?? '';
         if (empty($description) && $descriptionKey) {
             $languageKey         = "{$this->dirName}::{$descriptionKey}";
             $item['description'] = trans($languageKey);
@@ -327,35 +329,84 @@ class Plugin implements Arrayable, \ArrayAccess
         return $this->getPath() . '/Bootstrap.php';
     }
 
+    /**
+     * Check plugin has license.
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function checkLicenseValid(): bool
+    {
+        $appDomain = request()->getHost();
+
+        try {
+            $domain         = new \Utopia\Domains\Domain($appDomain);
+            $registerDomain = $domain->getRegisterable();
+        } catch (\Exception $e) {
+            $registerDomain = '';
+        }
+
+        if (empty($registerDomain)) {
+            return true;
+        }
+
+        $license = MarketingService::getInstance()->checkLicense($this->code, $registerDomain);
+        $status  = $license['status'] ?? 'fail';
+        if ($status == 'fail') {
+            SettingRepo::update('plugin', $this->code, ['status' => false]);
+
+            throw new \Exception($license['message'] ?? '插件授权未知错误, 请联系 beikeshop.com');
+        }
+
+        return $license['data']['has_license'] ?? false;
+    }
+
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
-        return (array) array_merge([
+        return array_merge([
             'name'    => $this->name,
             'version' => $this->getVersion(),
             'path'    => $this->path,
         ], $this->packageInfo);
     }
 
-    public function offsetExists($key): bool
+    /**
+     * @param $offset
+     * @return bool
+     */
+    public function offsetExists($offset): bool
     {
-        return Arr::has($this->packageInfo, $key);
+        return Arr::has($this->packageInfo, $offset);
     }
 
-    #[\ReturnTypeWillChange]
-    public function offsetGet($key)
+    /**
+     * @param $offset
+     * @return mixed
+     */
+    public function offsetGet($offset): mixed
     {
-        return $this->packageInfoAttribute($key);
+        return $this->packageInfoAttribute($offset);
     }
 
-    #[\ReturnTypeWillChange]
-    public function offsetSet($key, $value)
+    /**
+     * @param $offset
+     * @param $value
+     * @return array
+     */
+    public function offsetSet($offset, $value): array
     {
-        return Arr::set($this->packageInfo, $key, $value);
+        return Arr::set($this->packageInfo, $offset, $value);
     }
 
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($key)
+    /**
+     * @param $offset
+     * @return void
+     */
+    public function offsetUnset($offset): void
     {
-        unset($this->packageInfo[$key]);
+        unset($this->packageInfo[$offset]);
     }
 }

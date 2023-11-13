@@ -166,7 +166,7 @@ body.page-categories {
     list-style: none;
 
     li {
-      line-height: 1;
+      // line-height: 1;
       margin: 16px 0;
 
       ul {
@@ -193,6 +193,7 @@ body.page-categories {
           text-overflow:ellipsis;
           white-space: nowrap;
           display: inline-block;
+          line-height: 1.2;
         }
 
         &:hover {

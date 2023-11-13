@@ -6,14 +6,14 @@
 
 <div class="card mb-4 order-head">
   <div class="card-header d-flex align-items-center justify-content-between">
-    <h6 class="card-title">{{ __('shop/account.order.order_info.order_details') }}</h6>
+    <h6 class="card-title">{{ __('shop/account/order_info.order_details') }}</h6>
     <div>
       @if ($order->status == 'unpaid')
-        <a href="{{ shop_route('orders.pay', $order->number) }}" class="btn btn-primary btn-sm nowrap">{{ __('shop/account.order.order_info.to_pay') }}</a>
-        <button class="btn btn-outline-secondary btn-sm cancel-order" type="button">{{ __('shop/account.order.order_info.cancel') }}</button>
+        <a href="{{ shop_route('orders.pay', $order->number) }}" class="btn btn-primary btn-sm nowrap">{{ __('shop/account/order_info.to_pay') }}</a>
+        <button class="btn btn-outline-secondary btn-sm cancel-order" type="button">{{ __('shop/account/order_info.cancel') }}</button>
       @endif
       @if ($order->status == 'shipped')
-        <button class="btn btn-primary btn-sm shipped-ed" type="button">{{ __('shop/account.order.order_info.confirm_receipt') }}</button>
+        <button class="btn btn-primary btn-sm shipped-ed" type="button">{{ __('shop/account/order_info.confirm_receipt') }}</button>
       @endif
     </div>
   </div>
@@ -22,10 +22,10 @@
       <table class="table table-borderless mb-0">
         <thead>
           <tr>
-            <th>{{ __('shop/account.order.order_info.order_number') }}</th>
-            <th class="nowrap">{{ __('shop/account.order.order_info.order_date') }}</th>
-            <th>{{ __('shop/account.order.order_info.state') }}</th>
-            <th>{{ __('shop/account.order.order_info.order_amount') }}</th>
+            <th>{{ __('shop/account/order_info.order_number') }}</th>
+            <th class="nowrap">{{ __('shop/account/order_info.order_date') }}</th>
+            <th>{{ __('shop/account/order_info.state') }}</th>
+            <th>{{ __('shop/account/order_info.order_amount') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -48,26 +48,40 @@
     <table class="table ">
       <thead class="">
         <tr>
-          <th>{{ __('order.shipping_address') }}</th>
+          @if ($order->shipping_country)
+            <th>{{ __('order.shipping_address') }}</th>
+          @endif
           <th>{{ __('order.payment_address') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
+          @if ($order->shipping_country)
+            <td>
+              <div>
+                {{ __('address.name') }}：{{ $order->shipping_customer_name }}
+                @if ($order->shipping_telephone)
+                ({{ $order->shipping_telephone }})
+                @endif
+              </div>
+              <div>
+                {{ __('address.address') }}：
+                {{ $order->shipping_address_1 }}
+                {{ $order->shipping_address_2 }}
+                {{ $order->shipping_city }}
+                {{ $order->shipping_zone }}
+                {{ $order->shipping_country }}
+              </div>
+              <div>{{ __('address.post_code') }}：{{ $order->shipping_zipcode }}</div>
+            </td>
+          @endif
           <td>
-            <div>{{ __('address.name') }}：{{ $order->shipping_customer_name }} ({{ $order->shipping_telephone }})</div>
             <div>
-              {{ __('address.address') }}：
-              {{ $order->shipping_address_1 }}
-              {{ $order->shipping_address_2 }}
-              {{ $order->shipping_city }}
-              {{ $order->shipping_zone }}
-              {{ $order->shipping_country }}
+              {{ __('address.name') }}：{{ $order->payment_customer_name }}
+              @if ($order->payment_telephone)
+              ({{ $order->payment_telephone }})
+              @endif
             </div>
-            <div>{{ __('address.post_code') }}：{{ $order->shipping_zipcode }}</div>
-          </td>
-          <td>
-            <div>{{ __('address.name') }}：{{ $order->payment_customer_name }} ({{ $order->payment_telephone }})</div>
             <div>
               {{ __('address.address') }}：
               {{ $order->payment_address_1 }}
@@ -85,7 +99,7 @@
 </div>
 <div class="card mb-4">
   <div class="card-header">
-    <h6 class="card-title">{{ __('shop/account.order.order_info.order_items') }}</h6>
+    <h6 class="card-title">{{ __('shop/account/order_info.order_items') }}</h6>
   </div>
   <div class="card-body">
     @foreach ($order->orderProducts as $product)
@@ -105,7 +119,7 @@
         </div>
         @if ($order->status == 'completed')
           <a href="{{ shop_route('account.rma.create', [$product->id]) }}" style="white-space: nowrap;"
-            class="btn btn-outline-primary btn-sm">{{ __('shop/account.order.order_info.apply_after_sales') }}</a>
+            class="btn btn-outline-primary btn-sm">{{ __('shop/account/order_info.apply_after_sales') }}</a>
         @endif
       </div>
     @endforeach
@@ -114,7 +128,7 @@
 
 <div class="card mb-4">
   <div class="card-header">
-    <h6 class="card-title">{{ __('shop/account.order.order_info.order_total') }}</h6>
+    <h6 class="card-title">{{ __('shop/account/order_info.order_total') }}</h6>
   </div>
   <div class="card-body">
     <table class="table table-bordered border">
@@ -131,6 +145,17 @@
     </table>
   </div>
 </div>
+
+@if ($order->comment)
+  <div class="card mb-4">
+    <div class="card-header">
+      <h6 class="card-title">{{ __('order.comment') }}</h6>
+    </div>
+    <div class="card-body">
+      {{ $order->comment }}
+    </div>
+  </div>
+@endif
 
 @foreach ($html_items as $item)
   {!! $item !!}
@@ -171,15 +196,15 @@
 @if ($order->orderHistories->count())
   <div class="card mb-4">
     <div class="card-header">
-      <h6 class="card-title">{{ __('shop/account.order.order_info.order_status') }}</h6>
+      <h6 class="card-title">{{ __('shop/account/order_info.order_status') }}</h6>
     </div>
     <div class="card-body">
       <table class="table ">
         <thead class="">
           <tr>
-            <th>{{ __('shop/account.order.order_info.state') }}</th>
-            <th>{{ __('shop/account.order.order_info.remark') }}</th>
-            <th>{{ __('shop/account.order.order_info.update_time') }}</th>
+            <th>{{ __('shop/account/order_info.state') }}</th>
+            <th>{{ __('shop/account/order_info.remark') }}</th>
+            <th>{{ __('shop/account/order_info.update_time') }}</th>
           </tr>
         </thead>
         <tbody>

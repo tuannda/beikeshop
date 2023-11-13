@@ -16,6 +16,27 @@ body[class^="page-account-"] {
   background-color: #F7F8FA;
 }
 
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  font-style: normal;
+  -webkit-text-size-adjust: none;
+}
+
+body.app {
+  .breadcrumb-wrap {
+    height: 10px;
+
+    .container {
+      display: none;
+    }
+  }
+
+  .col-lg-3.col-12 {
+    display: none;
+  }
+}
+
 @font-face {font-family: 'Poppins';
   src: url('/fonts/poppins/Poppins-Regular.ttf') format("truetype");
   font-style: normal;
@@ -95,7 +116,12 @@ h1,h2,h3, h4, h5, h6, b, strong {
   .wh-#{$i}0 {
     height: #{$i}0px;
     width: #{$i}0px;
+    flex: 0 0 #{$i}0px;
   }
+}
+
+.tooltip {
+  // margin-bottom: 110px;
 }
 
 img {
@@ -115,7 +141,7 @@ img {
 }
 
 .login-pop-box {
-  overflow: inherit;
+  overflow: initial;
 
   @media (max-width: 768px) {
     width: 90% !important;
@@ -369,5 +395,11 @@ img {
     &:active {
       background-color: #eee;
     }
+  }
+}
+
+.address-dialog {
+  .el-form-item__label {
+    line-height: initial;
   }
 }

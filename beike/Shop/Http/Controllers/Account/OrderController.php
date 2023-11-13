@@ -14,7 +14,7 @@ namespace Beike\Shop\Http\Controllers\Account;
 use Beike\Repositories\OrderRepo;
 use Beike\Services\StateMachineService;
 use Beike\Shop\Http\Controllers\Controller;
-use Beike\Shop\Http\Resources\Account\OrderList;
+use Beike\Shop\Http\Resources\Account\OrderSimpleList;
 use Beike\Shop\Services\PaymentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -35,7 +35,7 @@ class OrderController extends Controller
         ];
         $orders = OrderRepo::filterOrders($filters);
         $data   = [
-            'orders' => OrderList::collection($orders),
+            'orders' => OrderSimpleList::collection($orders),
         ];
 
         return view('account/order', $data);
@@ -96,7 +96,7 @@ class OrderController extends Controller
         $comment = trans('shop/order.confirm_order');
         StateMachineService::getInstance($order)->changeStatus(StateMachineService::COMPLETED, $comment);
 
-        return json_success(trans('shop/account.order.completed'));
+        return json_success(trans('shop/account/order.completed'));
     }
 
     /**
@@ -117,6 +117,6 @@ class OrderController extends Controller
         $comment = trans('shop/order.cancel_order');
         StateMachineService::getInstance($order)->changeStatus(StateMachineService::CANCELLED, $comment);
 
-        return json_success(trans('shop/account.order.cancelled'));
+        return json_success(trans('shop/account/order.cancelled'));
     }
 }

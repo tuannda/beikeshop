@@ -10,11 +10,12 @@
  */
 
 return [
-    'product_total' => '商品总数',
+    'product_total' => '新增商品',
     'customer_view' => '用户访问量',
     'order_total'   => '订单量',
     'customer_new'  => '新增用户',
     'order_amount'  => '销售额',
+    'today'         => '今日',
     'yesterday'     => '昨日',
     'day_before'    => '较前一日',
 

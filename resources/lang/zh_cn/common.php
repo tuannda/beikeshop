@@ -89,12 +89,6 @@ return [
     'error_page'           => '您访问的数据不存在或已被删除~',
     'error_page_btn'       => '返回上一页',
     'no_repeat'            => '请勿重新添加',
-
-    'order'                => [
-        'unpaid'    => '待支付',
-        'paid'      => '已支付',
-        'shipped'   => '已发货',
-        'completed' => '已完成',
-        'cancelled' => '已取消',
-    ],
+    'text_hour'            => '小时',
+    'cropper_size'         => '裁剪框尺寸',
 ];

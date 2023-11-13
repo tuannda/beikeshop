@@ -1,5 +1,5 @@
 <div id="checkout-address-app" v-cloak>
-  <div class="checkout-black">
+  <div class="checkout-black" v-if="shippingRequired">
     <div class="checkout-title">
       <div class="d-flex">
         <h5 class="mb-0 me-4">{{ __('shop/checkout.address') }}</h5>
@@ -21,8 +21,7 @@
                 <span class="phone">@{{ address.phone }}</span>
               </div>
               <div class="zipcode">@{{ address.zipcode }}</div>
-              <div class="address-info">@{{ address.country }} @{{ address.zone }} @{{ address.city }}
-                @{{ address.address_1 }}</div>
+              <div class="address-info">@{{ address.address_1 }} @{{ address.address_2 }} @{{ address.city }} @{{ address.zone }} @{{ address.country }}</div>
               <div class="address-bottom">
                 <div>
                   <span class="badge bg-success"
@@ -53,8 +52,7 @@
                 <span>@{{ source.guest_shipping_address.zipcode }}</span>
                 <span class="ms-1">@{{ source.guest_shipping_address.email }}</span>
               </div>
-              <div class="address-info">@{{ source.guest_shipping_address.country }} @{{ source.guest_shipping_address.zone }} @{{ source.guest_shipping_address.city }}
-                @{{ source.guest_shipping_address.address_1 }}</div>
+              <div class="address-info">@{{ source.guest_shipping_address.address_1 }} @{{ source.guest_shipping_address.address_2 }} @{{ source.guest_shipping_address.city }} @{{ source.guest_shipping_address.zone }} @{{ source.guest_shipping_address.country }}</div>
               <div class="address-bottom">
                 <div>
                   <span class="badge bg-success">{{ __('shop/checkout.chosen') }}</span>
@@ -75,7 +73,7 @@
     </div>
   </div>
 
-  <div class="checkout-black" v-if='!same_as_shipping_address'>
+  <div class="checkout-black" v-if='!this.shippingRequired || !same_as_shipping_address'>
     <div class="checkout-title">
       <div class="d-flex">
         <h5 class="mb-0 me-4">{{ __('shop/checkout.payment_address') }}</h5>
@@ -95,8 +93,7 @@
                 <span class="phone">@{{ address.phone }}</span>
               </div>
               <div class="zipcode">@{{ address.zipcode }}</div>
-              <div class="address-info">@{{ address.country }} @{{ address.zone }} @{{ address.city }}
-                @{{ address.address_1 }}</div>
+              <div class="address-info">@{{ address.address_1 }} @{{ address.address_2 }} @{{ address.city }} @{{ address.zone }} @{{ address.country }}</div>
               <div class="address-bottom">
                 <div>
                   <span class="badge bg-success"
@@ -124,8 +121,7 @@
                 <span class="phone">@{{ source.guest_payment_address.phone }}</span>
               </div>
               <div class="zipcode">@{{ source.guest_payment_address.zipcode }}</div>
-              <div class="address-info">@{{ source.guest_payment_address.country }} @{{ source.guest_payment_address.zone }} @{{ source.guest_payment_address.city }}
-                @{{ source.guest_payment_address.address_1 }}</div>
+              <div class="address-info">@{{ source.guest_payment_address.address_1 }} @{{ source.guest_payment_address.address_2 }} @{{ source.guest_payment_address.city }} @{{ source.guest_payment_address.zone }} @{{ source.guest_payment_address.country }}</div>
               <div class="address-bottom">
                 <div>
                   <span class="badge bg-success">{{ __('shop/checkout.chosen') }}</span>
@@ -148,6 +144,7 @@
 
   <address-dialog ref="address-dialog" @change="onAddressDialogChange"></address-dialog>
 </div>
+
 @push('add-scripts')
 @include('shared.address-form')
 <script>
@@ -162,6 +159,7 @@
 
       isAllAddress: false,
       isAllAddressPayment: false,
+      shippingRequired: @json($shipping_require ?? true),
 
       source: {
         addresses: @json($addresses ?? []),

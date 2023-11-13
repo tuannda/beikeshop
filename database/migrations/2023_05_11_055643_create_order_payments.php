@@ -12,14 +12,18 @@ return new class extends Migration {
      */
     public function up()
     {
+        if (Schema::hasTable('order_payments')) {
+            return;
+        }
+
         Schema::create('order_payments', function (Blueprint $table) {
             $table->id();
             $table->integer('order_id');
             $table->string('transaction_id')->nullable();
-            $table->string('request')->nullable();
-            $table->string('response')->nullable();
-            $table->string('callback')->nullable();
-            $table->string('receipt')->nullable();
+            $table->text('request')->nullable();
+            $table->text('response')->nullable();
+            $table->text('callback')->nullable();
+            $table->text('receipt')->nullable();
             $table->timestamps();
         });
     }

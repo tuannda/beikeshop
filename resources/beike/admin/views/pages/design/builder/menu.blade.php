@@ -9,7 +9,7 @@
 @endpush
 
 @section('page-title-right')
-  <button type="button" class="btn btn-primary save-btn">{{ __('common.save') }}</button>
+  <button type="button" class="btn w-min-100 btn-primary save-btn">{{ __('common.save') }}</button>
 @endsection
 
 @section('content')

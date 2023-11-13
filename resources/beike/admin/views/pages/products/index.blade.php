@@ -125,7 +125,7 @@
                   <td><input type="checkbox" :value="{{ $product['id'] }}" v-model="selectedIds" /></td>
                   <td>{{ $product['id'] }}</td>
                   <td>
-                    <div class="wh-60 border d-flex rounded-2 justify-content-between align-items-center"><img src="{{ $product['images'][0] ?? 'image/placeholder.png' }}" class="img-fluid rounded-2"></div>
+                    <div class="wh-60 border d-flex rounded-2 justify-content-center align-items-center"><img src="{{ $product['images'][0] ?? 'image/placeholder.png' }}" class="img-fluid max-h-100"></div>
                   </td>
                   <td>
                     <a href="{{ $product['url'] }}" target="_blank" title="{{ $product['name'] }}" class="text-dark">{{ $product['name'] }}</a>
@@ -135,9 +135,9 @@
                   <td>{{ $product['position'] }}</td>
                   @if ($type != 'trashed')
                     <td>
-                      <span class="{{ $product['active'] ? 'text-success' : 'text-secondary' }}">
-                        {{ $product['active'] ? __('common.enable') : __('common.disable') }}
-                      </span>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input cursor-pointer" type="checkbox" role="switch" data-active="{{ $product['active'] ? true : false }}" data-id="{{ $product['id'] }}" @change="turnOnOff($event)" {{ $product['active'] ? 'checked' : '' }}>
+                      </div>
                     </td>
                   @endif
                   @hook('admin.product.list.column_value')
@@ -181,7 +181,8 @@
           sku: bk.getQueryString('sku'),
           model: bk.getQueryString('model'),
           active: bk.getQueryString('active'),
-          order_by: bk.getQueryString('order_by', ''),
+          sort: bk.getQueryString('sort', ''),
+          order: bk.getQueryString('order', ''),
         },
         selectedIds: [],
         productIds: @json($products->pluck('id')),
@@ -203,6 +204,17 @@
       },
 
       methods: {
+        turnOnOff() {
+          let id = event.currentTarget.getAttribute("data-id");
+          let checked = event.currentTarget.getAttribute("data-active");
+          let type = true;
+          if (checked) type = false;
+          $http.post('products/status', {ids: [id], status: type}).then((res) => {
+            layer.msg(res.message)
+            location.reload();
+          })
+        },
+
         batchDelete() {
           this.$confirm('{{ __('admin/product.confirm_batch_product') }}', '{{ __('common.text_hint') }}', {
             confirmButtonText: '{{ __('common.confirm') }}',
@@ -235,7 +247,8 @@
         },
 
         checkedOrderBy(orderBy) {
-          this.filter.order_by = orderBy;
+          this.filter.sort = orderBy.split(':')[0];
+          this.filter.order = orderBy.split(':')[1];
           location = bk.objectToUrlParams(this.filter, this.url)
         },
 

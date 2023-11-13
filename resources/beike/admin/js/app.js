@@ -3,7 +3,7 @@
  * @link          https://beikeshop.com
  * @Author        pu shuo <pushuo@guangda.work>
  * @Date          2022-08-26 18:18:22
- * @LastEditTime  2023-06-14 14:30:05
+ * @LastEditTime  2023-09-13 17:31:20
  */
 
 import http from "../../../js/http";
@@ -64,8 +64,40 @@ $(document).ready(function ($) {
     },
   });
 
+  autoActiveTab()
   tinymceInit()
+  inputLocaleTranslate()
+  checkRemoveCopyRight()
+  pageBottomBtns()
 });
+
+const inputLocaleTranslate = () => {
+  $('.translate-btn').click(function () {
+    var from = $(this).siblings('.from-locale-code').val();
+    var to = $(this).siblings('.to-locale-code').val();
+    let $parents = $(this).parents('.input-locale-wrap').length ? $(this).parents('.input-locale-wrap') : $(this).parents('.col-auto');
+    var text = $parents.find('.input-' + from).val();
+    if (!text) {
+      return layer.msg(lang.translate_form, () => {});
+    }
+
+    // 发请求之前删除所有错样式
+    $http.post('translation', {from, to, text}).then((res) => {
+      $('.translation-error-text').remove()
+
+      res.data.forEach((e) => {
+        $parents.find('.input-' + e.locale).removeClass('translation-error');
+
+        if (e.error) {
+          $parents.find('.input-' + e.locale).addClass('translation-error');
+          $parents.find('.input-' + e.locale).parents('.input-for-group').after('<div class="invalid-feedback translation-error-text mb-1 d-block" style="margin-left: 86px">' + e.error + '</div>');
+        } else {
+          $parents.find('.input-' + e.locale).val(e.result);
+        }
+      });
+    })
+  });
+}
 
 const tinymceInit = () => {
   if (typeof tinymce == 'undefined') {
@@ -76,7 +108,7 @@ const tinymceInit = () => {
     selector: '.tinymce',
     language: editor_language,
     branding: false,
-    height: 400,
+    height: 500,
     convert_urls: false,
     // document_base_url: 'ssssss',
     inline: false,
@@ -87,7 +119,7 @@ const tinymceInit = () => {
     // contextmenu: "link image imagetools table",
     toolbar_items_size: 'small',
     image_caption: true,
-    // imagetools_toolbar: 'imageoptions',
+    imagetools_toolbar: '',
     toolbar_mode: 'wrap',
     font_formats:
       "微软雅黑='Microsoft YaHei';黑体=黑体;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Georgia=georgia,palatino;Helvetica=helvetica;Times New Roman=times new roman,times;Verdana=verdana,geneva",
@@ -101,9 +133,9 @@ const tinymceInit = () => {
             if (images.length) {
               images.forEach(e => {
                 if (e.mime == 'video/mp4') {
-                  ed.insertContent(`<video src='/${e.path}' controls loop muted class="img-fluid" />`);
+                  ed.insertContent(`<video src='${e.path}' controls loop muted class="img-fluid" />`);
                 } else {
-                  ed.insertContent(`<img src='/${e.path}' class="img-fluid" />`);
+                  ed.insertContent(`<img src='${e.path}' class="img-fluid" />`);
                 }
               });
             }
@@ -114,3 +146,54 @@ const tinymceInit = () => {
   });
 }
 
+const autoActiveTab = () => {
+  const tab = bk.getQueryString('tab');
+
+  if (tab) {
+    if ($(`a[href="#${tab}"]`).length) {
+      $(`a[href="#${tab}"]`)[0].click()
+      return;
+    }
+
+    if ($(`button[data-bs-target="#${tab}"]`).length) {
+      $(`button[data-bs-target="#${tab}"]`)[0].click()
+    }
+  }
+}
+
+const pageBottomBtns = () => {
+  if ($('.page-bottom-btns').length && $('.page-bottom-btns').html().trim()) {
+    const contentInfoTop = $('.content-info').offset().top + $('.content-info').height();
+
+    $('#content').css({'padding-bottom': '6rem'})
+    $('.page-bottom-btns').css({'left': $('#content').offset().left})
+    $('.page-bottom-btns').fadeIn(150)
+  }
+}
+
+// 检查是否非法移除版权
+const checkRemoveCopyRight = () => {
+  let isRemove = false;
+
+  // 被注释或删除
+  if (!$('#copyright-text').length) {
+    isRemove = true;
+  }
+
+  // 被隐藏
+  if ($('#copyright-text').css('display') === 'none') {
+    isRemove = true;
+  }
+
+  // 被去除版权中 BeikeShop 文字
+  if ($('#copyright-text').text().indexOf('BeikeShop') === -1) {
+    isRemove = true;
+  }
+
+  if (!config.has_license && isRemove) {
+    $('.warning-copyright').removeClass('d-none')
+    if (!$('.warning-copyright').length) {
+      $('.header-content .header-right .navbar-right').prepend('<div class="alert alert-warning mb-0 warning-copyright"><i class="bi bi-exclamation-triangle-fill"></i> 请保留网站底部版权，或前往 <a href="https://beikeshop.com/vip/subscription?type=tab-license" target="_blank">购买授权</a></div>')
+    }
+  }
+}

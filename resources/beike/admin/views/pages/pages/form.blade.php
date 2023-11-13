@@ -8,10 +8,9 @@
   <script src="{{ asset('vendor/tinymce/5.9.1/tinymce.min.js') }}"></script>
 @endpush
 
-@section('page-title-right')
-<x-admin::form.row title="">
-  <button type="button" class="mt-3 btn btn-primary submit-form btn-lg" form="form-page">{{ __('common.save') }}</button>
-</x-admin::form.row>
+@section('page-bottom-btns')
+  <button type="button" class="w-min-100 btn btn-primary submit-form btn-lg" form="form-page">{{ __('common.save') }}</button>
+  <button class="btn btn-lg btn-default w-min-100 ms-3" onclick="bk.back()">{{ __('common.return') }}</button>
 @endsection
 
 @section('content')
@@ -54,8 +53,11 @@
 
                   <x-admin::form.row title="{{ __('page_category.text_summary') }}">
                     <div class="input-group w-max-400">
-                      <textarea rows="3" type="text" name="descriptions[{{ $language['code'] }}][summary]" class="form-control wp-400" placeholder="{{ __('page_category.text_summary') }}">{{ old('descriptions.' . $language['code'] . '.summary', $descriptions[$language['code']]['summary'] ?? '') }}</textarea>
+                      <textarea rows="3" type="text" name="descriptions[{{ $language['code'] }}][summary]" class="form-control wp-400 {{ $errors->has("descriptions.{$language['code']}.summary") ? 'is-invalid' : '' }}" placeholder="{{ __('page_category.text_summary') }}">{{ old('descriptions.' . $language['code'] . '.summary', $descriptions[$language['code']]['summary'] ?? '') }}</textarea>
                     </div>
+                    @if ($errors->has("descriptions.{$language['code']}.summary"))
+                      <span class="invalid-feedback d-block" role="alert">{{ $errors->first("descriptions.{$language['code']}.summary") }}</span>
+                    @endif
                   </x-admin::form.row>
 
                   <x-admin::form.row title="{{ __('admin/page.info_content') }}">
@@ -96,7 +98,12 @@
                 <input type="hidden" name="page_category_id" :value="page_category_name ? page_category_id : ''" />
               </div>
             </x-admin::form.row>
-              <x-admin-form-input name="views" title="{{ __('page_category.views') }}" value="{{ old('views', $page->views ?? '') }}" />
+
+            <x-admin-form-image name="image" title="{{ __('admin/page.cover_picture') }}" value="{{ old('image', $page->image ?? '') }}">
+              <div class="help-text font-size-12 lh-base">{{ __('common.recommend_size') }}: 500*350</div>
+            </x-admin-form-image>
+
+            <x-admin-form-input name="views" title="{{ __('page_category.views') }}" value="{{ old('views', $page->views ?? '') }}" />
 
             <x-admin::form.row title="{{ __('admin/product.product_relations') }}">
               <div class="module-edit-group wp-600">

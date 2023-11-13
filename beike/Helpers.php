@@ -13,6 +13,7 @@ use Beike\Services\CurrencyService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -223,9 +224,14 @@ function current_user(): ?AdminUser
  *
  * @return mixed
  */
-function current_customer(): ?Customer
+function current_customer(): mixed
 {
-    return auth()->guard(Customer::AUTH_GUARD)->user();
+    $customer = auth()->guard(Customer::AUTH_GUARD)->user();
+    if (empty($customer) && config('jwt.secret')) {
+        return auth('api_customer')->user();
+    }
+
+    return $customer;
 }
 
 /**
@@ -257,6 +263,11 @@ function locale(): string
         $userLocale = current_user()->locale;
 
         return ($locales->contains($userLocale)) ? $userLocale : 'en';
+    }
+
+    $registerLocale = registry('locale');
+    if ($registerLocale) {
+        return $registerLocale;
     }
 
     return Session::get('locale') ?? system_setting('base.locale');
@@ -462,7 +473,7 @@ function language_packages(): array
 {
     $languageDir = resource_path('lang');
 
-    return array_values(array_diff(scandir($languageDir), ['..', '.']));
+    return array_values(array_diff(scandir($languageDir), ['..', '.', '.DS_Store']));
 }
 
 /**
@@ -480,6 +491,11 @@ function currencies()
  */
 function current_currency_code(): string
 {
+    $registerLocale = registry('currency');
+    if ($registerLocale) {
+        return $registerLocale;
+    }
+
     return Session::get('currency') ?? system_setting('base.currency');
 }
 
@@ -521,14 +537,15 @@ function quantity_format($quantity)
 /**
  * 返回json序列化结果
  */
-function json_success($message, $data = [])
+function json_success($message, $data = []): JsonResponse
 {
-    return [
+    $data = [
         'status'  => 'success',
         'message' => $message,
         'data'    => $data,
     ];
 
+    return response()->json($data);
 }
 
 /**
@@ -746,4 +763,107 @@ function register($key, $value, bool $force = false)
 function registry($key, $default = null): mixed
 {
     return \Beike\Libraries\Registry::get($key, $default);
+}
+
+/**
+ * 处理域名, 去除协议前缀
+ *
+ * @param $domain
+ * @return string
+ */
+function clean_domain($domain): string
+{
+    $domain = trim($domain);
+    if (empty($domain)) {
+        return '';
+    }
+
+    return trim(str_replace(['http://', 'https://'], '', $domain));
+}
+
+/**
+ * Check domain ha license.
+ * 删除版权信息, 请先购买授权 https://beikeshop.com/vip/subscription
+ *
+ * @return bool
+ * @throws Exception
+ */
+function check_license(): bool
+{
+    $configLicenceCode = system_setting('base.license_code');
+    $appDomain         = clean_domain(config('app.url'));
+
+    try {
+        $domain         = new \Utopia\Domains\Domain($appDomain);
+        $registerDomain = $domain->getRegisterable();
+    } catch (\Exception $e) {
+        $registerDomain = '';
+    }
+    if (empty($registerDomain)) {
+        return false;
+    }
+
+    return $configLicenceCode == md5(mb_substr(md5($registerDomain), 2, 8));
+}
+
+/**
+ * @param $sourceFolder
+ * @param $zipPath
+ * @return ZipArchive
+ */
+function zip_folder($sourceFolder, $zipPath): ZipArchive
+{
+    $zip = new ZipArchive;
+    if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+        $dirIterator = new RecursiveDirectoryIterator($sourceFolder);
+        $iterator    = new RecursiveIteratorIterator($dirIterator);
+        foreach ($iterator as $file) {
+            if (! $dirIterator->isDot()) {
+                $filePath     = $file->getPathname();
+                $relativePath = substr($filePath, strlen($sourceFolder));
+                if ($file->isDir()) {
+                    $zip->addEmptyDir($relativePath);
+                } else {
+                    $zip->addFile($filePath, $relativePath);
+                }
+            }
+        }
+        $zip->close();
+    }
+
+    return $zip;
+}
+
+/**
+ * 移动文件夹
+ *
+ * @param $sourcePath
+ * @param $destinationPath
+ */
+function move_dir($sourcePath, $destinationPath)
+{
+    $baseSourceName = basename($sourcePath);
+    $files          = File::allFiles($sourcePath);
+    if (empty($files)) {
+        File::ensureDirectoryExists("{$destinationPath}{$baseSourceName}");
+    } else {
+        foreach ($files as $file) {
+            $relativePath = $file->getRelativePath();
+            $newBasePath  = "{$destinationPath}{$baseSourceName}/{$relativePath}/";
+            $newFilePath  = $newBasePath . $file->getFilename();
+            File::ensureDirectoryExists($newBasePath);
+            File::move($file->getPathname(), $newFilePath);
+        }
+    }
+    File::deleteDirectory($sourcePath);
+}
+
+/**
+ * 是否有开启的翻译工具
+ *
+ * @return bool
+ */
+function has_translator(): bool
+{
+    return \Beike\Repositories\PluginRepo::getTranslators()->count() > 0;
 }

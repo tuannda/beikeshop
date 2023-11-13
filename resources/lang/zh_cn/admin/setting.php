@@ -17,6 +17,7 @@ return [
     'design_footer_index'    => '页尾编辑器',
     'design_menu_index'      => '导航编辑器',
     'product_per_page'       => '每页显示数量',
+    'cdn_url'                => 'CDN URL',
 
     'checkout_settings'      => '结账设置',
     'basic_settings'         => '基础设置',
@@ -74,4 +75,8 @@ return [
     'please_select'          => '请添加',
     'multi_filter_helper'    => '请选择需要在前台商品列表筛选区域显示的属性，留空则显示全部',
     'filter_attribute'       => '属性筛选',
+    'license_code'           => '授权码',
+    'order_auto_cancel'      => '订单自动取消',
+    'order_auto_complete'    => '订单自动完成',
+    'translation_tools'      => '翻译工具',
 ];

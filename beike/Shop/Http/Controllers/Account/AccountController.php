@@ -15,8 +15,9 @@ use Beike\Repositories\CustomerRepo;
 use Beike\Repositories\OrderRepo;
 use Beike\Shop\Http\Controllers\Controller;
 use Beike\Shop\Http\Requests\ForgottenRequest;
-use Beike\Shop\Http\Resources\Account\OrderList;
+use Beike\Shop\Http\Resources\Account\OrderSimpleList;
 use Beike\Shop\Http\Resources\CustomerResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 
 class AccountController extends Controller
@@ -31,7 +32,7 @@ class AccountController extends Controller
         $customer = current_customer();
         $data     = [
             'customer'      => new CustomerResource($customer),
-            'latest_orders' => OrderList::collection(OrderRepo::getLatestOrders($customer, 10)),
+            'latest_orders' => OrderSimpleList::collection(OrderRepo::getLatestOrders($customer, 10)),
         ];
 
         return view('account/account', $data);
@@ -40,16 +41,16 @@ class AccountController extends Controller
     /**
      * 修改密码，提交 "origin_password"、"password", "password_confirmation", 验证新密码和确认密码相等，且原密码正确则修改密码
      * @param ForgottenRequest $request
-     * @return array
+     * @return JsonResponse
      * @throws \Exception
      */
-    public function updatePassword(ForgottenRequest $request): array
+    public function updatePassword(ForgottenRequest $request): JsonResponse
     {
         if (Hash::make($request->get('origin_password')) != current_customer()->getAuthPassword()) {
-            throw new \Exception(trans('shop/account.edit.origin_password_fail'));
+            throw new \Exception(trans('shop/account/edit.origin_password_fail'));
         }
         CustomerRepo::update(current_customer(), ['password' => $request->get('password')]);
 
-        return json_success(trans('shop/account.edit.password_edit_success'));
+        return json_success(trans('shop/account/edit.password_edit_success'));
     }
 }
